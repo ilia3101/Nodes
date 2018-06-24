@@ -1,0 +1,14 @@
+[
+    null,
+    "1asdfsd",
+    [
+        false,
+        "1",
+        true, {"hello":false}, true, 59, 342, 243,4 ,23
+    ],
+    {
+        "hi" : "hello"
+    },
+    true,
+    2789827.8927
+]

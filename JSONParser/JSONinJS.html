@@ -1,0 +1,26 @@
+<html>
+    <head>
+    </head>
+    <body onload="load()">
+        <script>
+        function load()
+        {
+
+            var response = `{
+    "thing1": null,
+    "some_numbers":
+    [
+        4.354,
+        9.34332,
+        34564.2,
+        "hahaha this is a string in an array of numbers ahahaha json"
+    ],
+    "other": "asdfghjk\\\"lqwertyuiopzx"
+}`
+            var $jsonobject = JSON.parse(response);
+            console.log($jsonobject.other/* .properties.geo.$ref */);
+            
+        }
+        </script>
+    </body>
+</html>

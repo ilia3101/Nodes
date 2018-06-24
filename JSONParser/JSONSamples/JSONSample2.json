@@ -1,0 +1,13 @@
+{
+    /* This is a comment */
+    "name": {
+        "first": "Milo",
+        "other": {
+            "middle":"durrant",
+            "second":"Hoskins"
+        }
+    },
+    // this is also a fukcing comment as fucking fuck
+    "age": "16",/* Hello! */"iq":"103", // heglo!
+    "hobbies": ["general knowledge", "flying rockets"]
+}
