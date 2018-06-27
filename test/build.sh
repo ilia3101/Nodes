@@ -109,7 +109,7 @@ do
 		errormessage "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 	fi
 done
-rm output
+rm .output
 echo " "
 
 
