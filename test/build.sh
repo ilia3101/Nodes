@@ -5,11 +5,13 @@ function endbuild {
 	exit
 }
 function errormessage {
-	printf "❌  $1\n"
+	if [[ "$OSTYPE" == "darwin"* ]]; then printf "❌    $1\n"
+	else printf "❌ $1\n"; fi
 	endbuild
 }
 function successmessage {
-	printf "😊  $1\n"
+	if [[ "$OSTYPE" == "darwin"* ]]; then printf "😊   $1\n"
+	else printf "😊 $1\n"; fi
 }
 
 ######################## Variables and flags and stuff #########################
