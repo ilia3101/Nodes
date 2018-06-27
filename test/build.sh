@@ -1,3 +1,5 @@
+buildstart=$(date +%s.%N)
+
 function endbuild {
 	echo " "
  	rm *.o 2> /dev/null
@@ -117,9 +119,11 @@ echo "Compiling source files..."
 touch .output
 for file in $src
 do
+	startfile=$(date +%s.%N)
 	$compiler -c $flags ../$file &> .output
+	filetime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" | bc -l)
 	if [ $? -eq 0 ]; then
-		successmessage "compiled $file"
+		successmessage "compiled $file in $filetime ms"
 	else
 		errormessage "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 	fi
@@ -132,9 +136,12 @@ echo " "
 echo Linking...
 $compiler *.o libraw_r.a $linkflags -o $appname
 if [ $? -eq 0 ]; then
-	successmessage "done!"
+	successmessage "done!\n"
 else
 	errormessage "failed to link"
 fi
+
+buildtime=$(echo "scale=0; ($(date +%s.%N)-$buildstart)*10000.0/10.0" | bc -l)
+echo "build completed in $buildtime ms"
 
 endbuild
