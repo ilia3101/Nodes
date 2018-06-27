@@ -1,7 +1,7 @@
 function endbuild {
 	echo " "
- 	rm *.o > /dev/null
-	rm build_info.h > /dev/null
+ 	rm *.o 2> /dev/null
+	rm build_info.h 2> /dev/null
 	exit
 }
 function errormessage {
@@ -32,6 +32,7 @@ fi
 
 
 ######################## Check if required things exist ########################
+echo -e "\nChecking a few things..."
 if [ ! -e libraw_r.a ]; then
 	errormessage "libraw_r.a is not present"
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -58,6 +59,17 @@ if [ ! -e libraw_r.a ]; then
 else
 	successmessage "libraw_r.a exists"
 fi
+#check if compiler exists
+if hash $compiler 2>/dev/null; then
+	successmessage "C compiler \"$compiler\" exists"
+else
+	errormessage "C compiler \"$compiler\" does not exist"
+fi
+if hash $cppcompiler 2>/dev/null; then
+	successmessage "C++ compiler \"$cppcompiler\" exists"
+else
+	errormessage "C++ compiler \"$cppcompiler\" does not exist"
+fi
 echo " "
 
 
@@ -81,6 +93,7 @@ else
 fi
 echo >> $info
 echo "#endif" >> $info
+successmessage "created build_info.h"
 echo " "
 
 

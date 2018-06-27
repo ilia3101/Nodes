@@ -62,5 +62,3 @@ int main(int argc, char ** argv)
 
     return 0;
 }
-
-// compile with: "gcc -c -std=c99 main.c && gcc main.o libraw_r.a -lstdc++ -lm -fopenmp -o test"
