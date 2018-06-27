@@ -1,23 +1,48 @@
-######################## Check if required things exist ########################
-if [ ! -e libraw_r.a ]; then
-	echo "libraw_r.a is required, add it to this folder."
-	exit;
-fi
-
 ######################## Variables and flags and stuff #########################
 info=build_info.h
 appname=ProcessingGraphApp
 compiler=gcc
 cppcompiler=g++
 flags="-std=c99 -O3 -Wall"
+#system specific
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 	linkflags="-lstdc++ -lm -fopenmp"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
 	linkflags="-lstdc++ -lm"
+	librawurl=https://www.libraw.org/data/LibRaw-0.19.0-Beta6-MacOSX.zip
+	librawfolder=LibRaw-0.19.0-Beta6
 else
 	echo Unknown os
 fi
 
+
+######################## Check if required things exist ########################
+if [ ! -e libraw_r.a ]; then
+	tput setaf 1
+	echo "libraw_r.a is required in this folder!!!"
+	tput sgr0
+	if [[ "$OSTYPE" == "linux-gnu" ]]; then
+		echo "Add libraw_r.a to this folder."
+		exit;
+	elif [[ "$OSTYPE" == "darwin"* ]]; then
+		read -p "Download libraw_r.a? [y/n] " yn
+		case $yn in
+			[Yy]* ) echo "Downloading libraw_r.a ..."
+					wget -O ./libraw.zip $librawurl > /dev/null
+					unzip libraw.zip > /dev/null
+					cp ./$librawfolder/lib/libraw_r.a ./
+					rm libraw.zip > /dev/null
+					rm -rf $librawfolder > /dev/null
+					echo "Downloaded"
+					break;;
+			[Nn]* ) echo "Put libraw_r.a in this folder thanks bye."; exit;;
+			* ) exit;;
+		esac
+	else
+		echo "Unknown os"
+		exit;
+	fi
+fi
 
 
 ######################## Create build info header file #########################
