@@ -1,4 +1,4 @@
-buildstart=$(date +%s.%N)
+if [[ "$OSTYPE" == "linux-gnu" ]]; then buildstart=$(date +%s.%N); fi
 
 function endbuild {
 	echo " "
@@ -7,12 +7,15 @@ function endbuild {
 	exit
 }
 function errormessage {
-	if [[ "$OSTYPE" == "darwin"* ]]; then printf "❌    $1\n"
+	if [[ "$OSTYPE" == "darwin"* ]]; then printf "❌   $1\n"
 	else printf "❌ $1\n"; fi
+}
+function death {
+	errormessage $1
 	endbuild
 }
 function successmessage {
-	if [[ "$OSTYPE" == "darwin"* ]]; then printf "😊   $1\n"
+	if [[ "$OSTYPE" == "darwin"* ]]; then printf "😊  $1\n"
 	else printf "😊 $1\n"; fi
 }
 
@@ -38,11 +41,11 @@ fi
 ######################## Check if required things exist ########################
 echo -e "\nChecking a few things..."
 if [ ! -e libraw_r.a ]; then
-	errormessage "libraw_r.a is not present"
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then
-		echo "Add libraw_r.a to this folder."
+		death "libraw_r.a is not present, add libraw_r.a to this folder."
 		exit;
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
+		errormessage "libraw_r.a is not present"
 		read -p "Download libraw_r.a? [y/n] " yn
 		case $yn in
 			[Yy]* ) echo "Downloading libraw_r.a ..."
@@ -57,7 +60,7 @@ if [ ! -e libraw_r.a ]; then
 			* ) exit;;
 		esac
 	else
-		echo "Unknown os"
+		death "Unknown OS"
 		exit;
 	fi
 else
@@ -67,12 +70,12 @@ fi
 if hash $compiler 2>/dev/null; then
 	successmessage "C compiler \"$compiler\" exists"
 else
-	errormessage "C compiler \"$compiler\" does not exist"
+	death "C compiler \"$compiler\" does not exist"
 fi
 if hash $cppcompiler 2>/dev/null; then
 	successmessage "C++ compiler \"$cppcompiler\" exists"
 else
-	errormessage "C++ compiler \"$cppcompiler\" does not exist"
+	death "C++ compiler \"$cppcompiler\" does not exist"
 fi
 echo " "
 
@@ -93,7 +96,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 	echo "#define BuildSystem" \"$(sw_vers -productName)" "$(sw_vers \
 	-productVersion)" ("$(sw_vers -buildVersion)")"\" >> $info
 else
-	echo Unknown OS
+	death "Unknown OS"
 fi
 echo >> $info
 echo "#endif" >> $info
@@ -109,7 +112,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 elif [[ "$OSTYPE" == "darwin"* ]]; then
 	src=$(find . -name "*.c")
 else
-	echo Unknown os
+	death "Unknown OS"
 fi
 cd - > /dev/null
 
@@ -119,13 +122,17 @@ echo "Compiling source files..."
 touch .output
 for file in $src
 do
-	startfile=$(date +%s.%N)
+	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
 	$compiler -c $flags ../$file &> .output
-	filetime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" | bc -l)
 	if [ $? -eq 0 ]; then
-		successmessage "compiled $file in $filetime ms"
+		if [[ "$OSTYPE" == "linux-gnu" ]]; then
+			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
+			successmessage "compiled $file in $ftime ms"
+		else
+			successmessage "compiled $file"
+		fi
 	else
-		errormessage "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
+		death "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 	fi
 done
 rm .output
@@ -136,12 +143,14 @@ echo " "
 echo Linking...
 $compiler *.o libraw_r.a $linkflags -o $appname
 if [ $? -eq 0 ]; then
-	successmessage "done!\n"
+	successmessage "done!"
 else
-	errormessage "failed to link"
+	death "failed to link"
 fi
 
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
 buildtime=$(echo "scale=0; ($(date +%s.%N)-$buildstart)*10000.0/10.0" | bc -l)
-echo "build completed in $buildtime ms"
+echo -e "\nbuild completed in $buildtime ms"
+fi
 
 endbuild
