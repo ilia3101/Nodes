@@ -18,12 +18,15 @@ int main(int argc, char ** argv)
 {
     /* Default plugin directory */
     // char * NodeDirectory = ".";
+    if (argc == 1) {
+        puts("No file specified");
+        return 0;
+    }
 
-    puts("");
     printf("Libraw version: \"%s\"\n", libraw_version());
     libraw_data_t * Raw = libraw_init(0);
     // puts("1");
-    libraw_open_file(Raw, "IMG_20180606_104935.dng");
+    libraw_open_file(Raw, argv[1]);
     // puts("2");
     libraw_unpack(Raw);
     // puts("3");
