@@ -1,3 +1,17 @@
+function endbuild {
+	echo " "
+ 	rm *.o > /dev/null
+	rm build_info.h > /dev/null
+	exit
+}
+function errormessage {
+	echo ❌ $1
+	endbuild
+}
+function successmessage {
+	echo 😊 $1
+}
+
 ######################## Variables and flags and stuff #########################
 info=build_info.h
 appname=ProcessingGraphApp
@@ -18,9 +32,7 @@ fi
 
 ######################## Check if required things exist ########################
 if [ ! -e libraw_r.a ]; then
-	tput setaf 1
-	echo "libraw_r.a is required in this folder!!!"
-	tput sgr0
+	errormessage "libraw_r.a is not present"
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then
 		echo "Add libraw_r.a to this folder."
 		exit;
@@ -42,6 +54,8 @@ if [ ! -e libraw_r.a ]; then
 		echo "Unknown os"
 		exit;
 	fi
+else
+	successmessage "libraw_r.a exists"
 fi
 
 
@@ -80,18 +94,28 @@ else
 fi
 cd - > /dev/null
 
+
 ########################### Compile all source files ###########################
+echo "Compiling source files..."
 for file in $src
 do
-	echo Compiling $file
 	$compiler -c $flags ../$file
+	if [ $? -eq 0 ]; then
+		successmessage "compiled $file"
+	else
+		errormessage "$file did not compile"
+	fi
 done
 echo " "
+
 
 ##################################### Link #####################################
 echo Linking...
 $compiler *.o libraw_r.a $linkflags -o $appname
-echo " "
-echo Done!
+if [ $? -eq 0 ]; then
+	successmessage "done!"
+else
+	errormessage "failed to link"
+fi
 
-rm *.o
+endbuild
