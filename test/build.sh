@@ -5,11 +5,11 @@ function endbuild {
 	exit
 }
 function errormessage {
-	echo ❌ $1
+	printf "❌  $1\n"
 	endbuild
 }
 function successmessage {
-	echo 😊 $1
+	printf "😊  $1\n"
 }
 
 ######################## Variables and flags and stuff #########################
@@ -23,6 +23,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 	linkflags="-lstdc++ -lm -fopenmp"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
 	linkflags="-lstdc++ -lm"
+	#hacky bad, will need to be changed as new versions of libraw are out
 	librawurl=https://www.libraw.org/data/LibRaw-0.19.0-Beta6-MacOSX.zip
 	librawfolder=LibRaw-0.19.0-Beta6
 else
@@ -40,11 +41,11 @@ if [ ! -e libraw_r.a ]; then
 		read -p "Download libraw_r.a? [y/n] " yn
 		case $yn in
 			[Yy]* ) echo "Downloading libraw_r.a ..."
-					wget -O ./libraw.zip $librawurl > /dev/null
-					unzip libraw.zip > /dev/null
+					wget -O ./libraw.zip $librawurl &> /dev/null
+					unzip libraw.zip &> /dev/null
 					cp ./$librawfolder/lib/libraw_r.a ./
-					rm libraw.zip > /dev/null
-					rm -rf $librawfolder > /dev/null
+					rm libraw.zip &> /dev/null
+					rm -rf $librawfolder &> /dev/null
 					echo "Downloaded"
 					break;;
 			[Nn]* ) echo "Put libraw_r.a in this folder thanks bye."; exit;;
@@ -57,6 +58,7 @@ if [ ! -e libraw_r.a ]; then
 else
 	successmessage "libraw_r.a exists"
 fi
+echo " "
 
 
 ######################## Create build info header file #########################
@@ -65,8 +67,8 @@ touch $info
 echo "#ifndef _build_info_h_" > $info
 echo "#define _build_info_h_" >> $info
 echo >> $info
-echo "#define BuildCCompiler" \"$($compiler --version | head -n 1)\" >> $info
-echo "#define BuildCPPCompiler" \"$($cppcompiler --version | head -n 1)\">>$info
+echo "#define BuildCCompiler \"$($compiler --version | head -n 1)\"" >> $info
+echo "#define BuildCPPCompiler \"$($cppcompiler --version| head -n 1)\"" >>$info
 echo "#define BuildDate" \"$(date)\" >> $info
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 	. /etc/os-release
@@ -97,15 +99,17 @@ cd - > /dev/null
 
 ########################### Compile all source files ###########################
 echo "Compiling source files..."
+touch .output
 for file in $src
 do
-	$compiler -c $flags ../$file
+	$compiler -c $flags ../$file &> .output
 	if [ $? -eq 0 ]; then
 		successmessage "compiled $file"
 	else
-		errormessage "$file did not compile"
+		errormessage "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 	fi
 done
+rm output
 echo " "
 
 
