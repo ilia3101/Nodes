@@ -7,6 +7,8 @@
 
 #include "JSONParser.h"
 
+int num_block_real = 0;
+
 int is_start_of_json_token(char c)
 {
     return ( c == '{' || c == '}' || c == '[' || c == ']' ||
@@ -146,6 +148,7 @@ char * json_read_quotes(MemoryBank_t * MB, char * Text, char ** Pointer)
 /* Will return end of block to *TokenOffset */
 JSONBlock_t * parse_json(JSONBlock_t * Parent, char ** Tokens, int * TokenLengths, int * TokenOffset)
 {
+    num_block_real++;
     JSONBlock_t * json = NULL;
 
     int parse_offset = 0;
@@ -282,10 +285,12 @@ void json_clear_comments(char * Text)
 JSONBlock_t * ParseJSON(char * Text)
 {
     json_clear_comments(Text);
+    int num_blocks = 0;
     int num_tokens = json_count_tokens(Text);
     if (num_tokens == 0) return NULL;
-    char ** tokens = alloca(num_tokens * sizeof(char *));
-    int * token_lengths = alloca(num_tokens * sizeof(int));
+    // fix mallocc!!!!
+    char ** tokens = malloc(num_tokens * sizeof(char *));
+    int * token_lengths = malloc(num_tokens * sizeof(int));
 
     char * t = Text;
     for (int i = 0; i < num_tokens; ++i)
@@ -298,6 +303,15 @@ JSONBlock_t * ParseJSON(char * Text)
 
         t = end;
     }
+
+    for (int i = 1; i < (num_tokens-1); ++i)
+    {
+        if (*tokens[i] != ':' && *tokens[i] != ',' && (*tokens[i-1] == ':' || *tokens[i+1] != ':'))
+            num_blocks++;
+    }
+
+    MemoryBank_t * mb = new_MemoryBank(1);
+    JSONBlock_t * all_blocks = MBMalloc(mb, num_blocks * sizeof(JSONBlock_t));
 
     /* for (int i = 0; i < num_tokens; ++i) {
         char old = tokens[i][token_lengths[i]];
@@ -315,7 +329,12 @@ JSONBlock_t * ParseJSON(char * Text)
     }
     if (close_brackets != open_brackets) return NULL;
 
+    /* Just a fake parent block to feed to the parse_json ting */
+    JSONBlock_t * parent_block = alloca(sizeof(JSONBlock_t));
+    parent_block->memory_bank = mb;
     JSONBlock_t * json = parse_json(NULL, tokens, token_lengths, NULL);
+    //REMOVE!!!!!
+    printf("tokens: %i, blocks: %i, blocks_real: %i\n", num_tokens, num_blocks, num_block_real);
     return json;
 }
 
@@ -559,10 +578,10 @@ JSONObjectType_t JSONBlockGetType(JSONBlock_t * JSON)
 }
 
 
-#if 0
+#if 1
 int main()
 {
-    FILE * text = fopen("JSONSample5.json", "rb");
+    FILE * text = fopen("airlines1.json", "rb");
     fseek(text, 0, SEEK_END);
     int filesize = ftell(text);
     fseek(text, 0, SEEK_SET);
