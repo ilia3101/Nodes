@@ -578,7 +578,7 @@ JSONObjectType_t JSONBlockGetType(JSONBlock_t * JSON)
 }
 
 
-#if 1
+#if 0
 int main()
 {
     FILE * text = fopen("airlines1.json", "rb");

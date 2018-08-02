@@ -9,11 +9,12 @@
 #include <time.h>
 
 // #include "../MemoryBank/MemoryBank.h"
+#include "ProcessingGraph.h"
 
 #include "types/PGImage_types.h"
 #include "types/PGTypes.h"
 
-/* PGImage currently does not use memorybank due to its simplicity (right now)*/
+/* PGImage currently does not use memorybank due to its simplicity (for now) */
 PGImage_t * new_PGImage(int Width, int Height)
 {
     PGImage_t * image = malloc(sizeof(PGImage_t));

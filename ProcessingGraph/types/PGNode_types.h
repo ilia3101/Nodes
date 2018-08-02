@@ -39,12 +39,23 @@ typedef struct {
 /* The node itself */
 typedef struct PGNode
 {
+    /* Graph which owns this node */
+    /* PGGraph_t */void * graph;
+
     int changed; /* Nodes going to it have been changed, so re-render */
 
-    struct PGNode ** input_nodes;
-    struct PGNode** *output_nodes; /* One output can go to many nodes' inputs */
+
+    /* Outputs and inputs are stored as indexes of other nodes */
+
+    /* Inputs */
+    int * input_nodes; /* Which nodes are inputs */
+    int * input_node_output_index; /* Which output of which node is used */
+
+    /* Outputs */
+    int ** output_nodes; /* One output can go to many nodes' inputs */
     int * output_node_counts; /* Number of nodes getting each output */
-    PGNodeOutput_t * outputs;
+    PGNodeOutput_t * outputs; /* The node's outputs are here */
+
 
     /* Parameters */
     PGNodeParameterState_t * parameter_states;
@@ -88,6 +99,7 @@ typedef struct
     /* File - no info required */
 } PGNodeParameterSpec_t;
 
+
 /* A node is defined using a PGNodeSpec_t, plugins return a pointer to theirs */
 struct PGNodeSpec
 {
@@ -106,7 +118,7 @@ struct PGNodeSpec
     PGNodeParameterSpec_t * Parameters;
 
     /* Array of output functions */
-    PGNodeOutput_t (** OutputFunctions)(PGNode_t *);
+    void (** OutputFunctions)(PGNode_t *, PGNodeOutput_t *);
 
     /* "init" - called at the end of intialisation */
     void (* Init)(PGNode_t *, MemoryBank_t *);

@@ -1,4 +1,4 @@
-/* A node must be a .so file */
+/* A node must be a .so or .dll file */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,14 +8,22 @@
 /* This must be included */
 #include "../ProcessingGraph.h"
 
-PGNodeOutput_t en_output_function(PGNode_t * Node)
-{
-    /* PGNodeGetInput(index 0) */
-    PGNodeOutput_t output = { .type = PGNodeImageOutput, 
-                              .value.image = new_PGImage(600, 600) };
 
-    return output;
+/* This node only needs one output function */
+void en_output_function(PGNode_t * Node, PGNodeOutput_t * Output)
+{
+    PGNodeGetOutput( PGNodeGetInputNode(Node, 0),
+                     PGNodeGetInputNodeOutputIndex(Node, 0) );
 }
+
+// PGNodeOutput_t PGNodeSpecGetOutputFunction(PGNode_t * Node, int FunctionIndex)
+// {
+//     /* PGNodeGetInput(index 0) */
+//     PGNodeOutput_t output = { .type = PGNodeImageOutput, 
+//                               .value.image = new_PGImage(600, 600) };
+
+//     return output;
+// }
 
 void en_init(PGNode_t * Node, MemoryBank_t * MemoryBank)
 {
@@ -27,13 +35,14 @@ void en_uninit(PGNode_t * Node)
     return;
 }
 
-PGNodeDataType_t en_output_types[] = {PGNodeImageOutput};
-PGNodeOutput_t (* en_output_functions[])(PGNode_t *) = {&en_output_function};
 
-PGNodeSpec_t pg_exposure_node_spec =
+static PGNodeDataType_t en_output_types[] = {PGNodeImageOutput};
+static void (* en_output_functions[1])(PGNode_t *, PGNodeOutput_t *);
+
+static PGNodeSpec_t en_spec =
 {
     .Name = "Exposure",
-    .Description = "This node adjusts the exposure of an image",
+    .Description = "Adjust exposure of an image",
     .Category = "Basics",
 
     .NumOutputs = 1,
@@ -60,5 +69,7 @@ PGNodeSpec_t pg_exposure_node_spec =
 
 PGNodeSpec_t * PGNodeGetSpec()
 {
-    return &pg_exposure_node_spec;
+    /* Set pointer in output function array to the output function */
+    en_output_functions[0] = &en_output_function;
+    return &en_spec;
 }

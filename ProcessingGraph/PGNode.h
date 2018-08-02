@@ -24,6 +24,7 @@ void PGNodeFlagChanged(PGNode_t * Node);
 PGNodeOutput_t PGNodeGetOutput(PGNode_t * Node, int OutputIndex);
 int PGNodeGetNumInputs(PGNode_t * Node);
 PGNode_t * PGNodeGetInputNode(PGNode_t * Node, int InputIndex);
+int PGNodeGetInputNodeOutputIndex(PGNode_t * Node, int InputIndex);
 int PGNodeGetNumOutputs(PGNode_t * Node);
 int PGNodeGetNumNodesAtOutput(PGNode_t * Node, int OutputIndex);
 PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex);

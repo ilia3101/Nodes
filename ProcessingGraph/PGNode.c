@@ -43,8 +43,8 @@ void delete_PGNode(PGNode_t * Node)
 
 PGNodeOutput_t PGNodeGetOutput(PGNode_t * Node, int OutputIndex)
 {
-    PGNodeOutput_t output = Node->spec->OutputFunctions[OutputIndex](Node);
-    return output;
+    // PGNodeOutput_t output = Node->spec->OutputFunctions[OutputIndex](Node);
+    return (PGNodeOutput_t){};
 }
 
 void PGNodeFlagChanged(PGNode_t * Node)
@@ -67,7 +67,7 @@ int PGNodeGetNumInputs(PGNode_t * Node)
 
 PGNode_t * PGNodeGetInputNode(PGNode_t * Node, int InputIndex)
 {
-    return Node->input_nodes[InputIndex];
+    return  (void *)(uint64_t)Node->input_nodes[InputIndex];
 }
 
 int PGNodeGetNumOutputs(PGNode_t * Node)
@@ -82,5 +82,5 @@ int PGNodeGetNumNodesAtOutput(PGNode_t * Node, int OutputIndex)
 
 PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex)
 {
-    return Node->output_nodes[OutputIndex][NodeIndex];
+    return (void *)(uint64_t)Node->output_nodes[OutputIndex][NodeIndex];
 }
