@@ -1,4 +1,4 @@
-# Rule: static linking as much as possible (discovered the need for this manually)
+# Rule: static linking as much as possible (or hell)
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then buildstart=$(date +%s.%N); fi
 
@@ -10,6 +10,7 @@ function endbuild {
 	echo " "
  	rm *.o 2> /dev/null
 	rm build_info.h 2> /dev/null
+	rm .output 2> /dev/null
 	exit
 }
 function errormessage {
@@ -77,11 +78,11 @@ if hash $compiler 2>/dev/null; then
 else
 	death "C compiler \"$compiler\" does not exist"
 fi
-if hash $cppcompiler 2>/dev/null; then
-	successmessage "C++ compiler \"$cppcompiler\" exists"
-else
-	death "C++ compiler \"$cppcompiler\" does not exist"
-fi
+# if hash $cppcompiler 2>/dev/null; then
+# 	successmessage "C++ compiler \"$cppcompiler\" exists"
+# else
+# 	death "C++ compiler \"$cppcompiler\" does not exist"
+# fi
 echo " "
 
 
@@ -115,7 +116,7 @@ rm -rf buildoutput &> /dev/null
 echo Creating buildoutput folder...
 #this just won't fail will it
 mkdir buildoutput
-successmessage "Created buildoutput folder"
+successmessage "created buildoutput folder"
 echo " "
 
 
@@ -156,18 +157,25 @@ echo " "
 
 
 ############################ Build all the libraries ###########################
-libraries=(MemoryBank ProcessingGraph)
+libraries=(ProcessingGraph MemoryBank)
 echo "Building libraries ..."
 for library in ${libraries[@]}
 do
+	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
 	cd ../$library > /dev/null
-	./build.sh $compiler $compilerflags &> /dev/null
+	touch .output
+	./build.sh $compiler $compilerflags &> .output
 	if [ $? -eq 0 ]; then
-		successmessage "Built $library"
+		if [[ "$OSTYPE" == "linux-gnu" ]]; then
+			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
+			successmessage "built $library in $ftime ms"
+		else
+			successmessage "built $library"
+		fi
 	else
-		rm -rf buildoutput &> /dev/null
-		death "Failed to build $library"
+		death "$library did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 	fi
+	rm .output
 	#copy everything built to main build folder
 	for f in buildoutput/*; do 
 		cp -r $f $OLDPWD/$f
@@ -182,17 +190,35 @@ echo " "
 echo "Compiling any separate C files ..."
 # without .c extension
 cfiles=(main bitmap)
+touch .output
 for file in ${cfiles[@]}
 do
+	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
 	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> /dev/null
 	if [ $? -eq 0 ]; then
-		successmessage "Compiled $file.c"
+		if [[ "$OSTYPE" == "linux-gnu" ]]; then
+			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
+			successmessage "compiled $file in $ftime ms"
+		else
+			successmessage "compiled $file"
+		fi
 	else
-		rm -rf buildoutput &> /dev/null
-		death "Failed to compile $file.c"
+		death "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 	fi
 done
+rm .output
 echo " "
+# for file in ${cfiles[@]}
+# do
+# 	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> /dev/null
+# 	if [ $? -eq 0 ]; then
+# 		successmessage "Compiled $file.c"
+# 	else
+# 		rm -rf buildoutput &> /dev/null
+# 		death "Failed to compile $file.c"
+# 	fi
+# done
+# echo " "
 
 
 
@@ -224,7 +250,7 @@ cd - &> /dev/null
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 buildtime=$(echo "scale=0; ($(date +%s.%N)-$buildstart)*10000.0/10.0" | bc -l)
-echo -e "\nbuild completed in $buildtime""ms. See results in buildoutput folder."
+echo -e "\nbuild completed in $buildtime""ms." #" See results in buildoutput folder."
 fi
 
 endbuild

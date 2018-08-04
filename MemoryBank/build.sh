@@ -14,7 +14,7 @@ do
     #compile file
     $compiler $compilerflags -c $file.c -o buildoutput/$file.o
     #add it to library archive ting
-    ar rvs buildoutput/ProcessingGraph.a buildoutput/$file.o
+    ar rvs buildoutput/MemoryBank.a buildoutput/$file.o
     if [ ! $? -eq 0 ]; then
         rm -rf buildoutput
         exit 1

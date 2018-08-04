@@ -15,7 +15,7 @@
 #include "types/PGTypes.h"
 
 /* MemoryBank can be left NULL */
-PGNode_t * new_PGNode(PGNodeSpec_t * Spec);
+PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph);
 void delete_PGNode(PGNode_t * Node);
 
 /* Called when parameters changed- flags all nodes connected to it (forwards) */

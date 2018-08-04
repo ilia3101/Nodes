@@ -10,10 +10,7 @@ PGGraph_t * new_PGGraph(char * NodeDirectory);
 /* Gets the output of a node */
 PGImage_t * PGGraphGetOutput(PGGraph_t * Graph);
 
-/* Get node types that the library has */
-int PGGraphGetNumNodeTypes(PGGraph_t * Graph);
-PGNodeSpec_t * PGGraphGetNodeTypes(PGGraph_t * Graph);
-/* Will probably be one of the noe types obtained from above functions */
-int PGGraphAddNode(PGNodeSpec_t * NodeType);
+/* Will probably be one of the node types obtained from above functions */
+void PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * NodeType);
 
 #endif

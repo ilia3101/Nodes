@@ -16,7 +16,7 @@ extern void writebmp(uint8_t * data, int width, int height, char * imagename);
 
 int main(int argc, char ** argv)
 {
-    InitialiseProcessingGraphLibrary("/home/ilia/ProcessingGraphApp/test/buildoutput/DefaultNodes");
+    ProcessingGraphInitialiseLibrary("/home/ilia/ProcessingGraphApp/test/buildoutput/DefaultNodes");
 
     if (argc == 1) {
         puts("No file specified");

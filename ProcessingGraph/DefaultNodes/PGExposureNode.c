@@ -25,7 +25,7 @@ void en_output_function(PGNode_t * Node, PGNodeOutput_t * Output)
 //     return output;
 // }
 
-void en_init(PGNode_t * Node, MemoryBank_t * MemoryBank)
+void en_init(PGNode_t * Node)
 {
     return;
 }
@@ -37,7 +37,8 @@ void en_uninit(PGNode_t * Node)
 
 
 static PGNodeDataType_t en_output_types[] = {PGNodeImageOutput};
-static void (* en_output_functions[1])(PGNode_t *, PGNodeOutput_t *);
+static PGNodeDataType_t en_input_types[] = {PGNodeImageOutput};
+static void (*output_func[1])(PGNode_t*,PGNodeOutput_t*)={&en_output_function};
 
 static PGNodeSpec_t en_spec =
 {
@@ -46,8 +47,9 @@ static PGNodeSpec_t en_spec =
     .Category = "Basics",
 
     .NumOutputs = 1,
-    .NumInputs = 1,
     .OutputTypes = en_output_types,
+    .NumInputs = 1,
+    .InputTypes = en_input_types,
 
     .HasParameters = 1,
     .NumParameters = 1,
@@ -59,7 +61,7 @@ static PGNodeSpec_t en_spec =
                                             .MaxValue = 4.0,
                                             .DefaultValue = 0.0 },
 
-    .OutputFunctions = en_output_functions,
+    .OutputFunctions = output_func,
 
     .Init = &en_init,
     .UnInit = &en_uninit
@@ -70,6 +72,5 @@ static PGNodeSpec_t en_spec =
 PGNodeSpec_t * PGNodeGetSpec()
 {
     /* Set pointer in output function array to the output function */
-    en_output_functions[0] = &en_output_function;
     return &en_spec;
 }

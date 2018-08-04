@@ -14,23 +14,28 @@
 #include "types/PGTypes.h"
 
 
-PGNode_t * new_PGNode(PGNodeSpec_t * Spec)
+PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph)
 {
     MemoryBank_t * mb = new_MemoryBank(1);
 
     PGNode_t * node = MBMalloc(mb, sizeof(PGNode_t));
     node->memory_bank = mb;
 
+    node->graph = Graph;
     node->spec = Spec;
-    node->parameter_states = MBMalloc(mb, Spec->NumParameters * sizeof(PGNodeParameterState_t));
-    node->input_nodes = MBMalloc(mb, Spec->NumInputs * sizeof(PGNode_t *));
-    node->output_nodes = MBMalloc(mb, Spec->NumOutputs * sizeof(PGNode_t **));
-    for (int i = 0; i < Spec->NumOutputs; i++)
-        node->output_nodes[i] = MBMalloc(mb, sizeof(PGNode_t *));
+    node->input_nodes = MBMalloc(mb, Spec->NumInputs * sizeof(int));
+    for (int i = 0; i < Spec->NumInputs; ++i) node->input_nodes[i] = -1;
+    node->output_nodes = MBMalloc(mb, Spec->NumOutputs * sizeof(int *));
+    for (int i = 0; i < Spec->NumOutputs; ++i) {
+        node->output_nodes[i] = MBMalloc(mb, sizeof(int));
+        node->output_nodes[i][0] = -1;
+    }
     node->output_node_counts = MBZeroAlloc(mb, sizeof(int) * Spec->NumOutputs);
+    node->parameter_states = MBZeroAlloc(mb,
+                            Spec->NumParameters*sizeof(PGNodeParameterState_t));
 
     /* Run the node class's init function */
-    Spec->Init(node, mb);
+    Spec->Init(node);
 
     return node;
 }
@@ -60,19 +65,20 @@ void PGNodeFlagChanged(PGNode_t * Node)
     }
 }
 
-int PGNodeGetNumInputs(PGNode_t * Node)
-{
-    return Node->spec->NumInputs;
-}
 
+
+
+
+
+/* TODO: FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 PGNode_t * PGNodeGetInputNode(PGNode_t * Node, int InputIndex)
 {
     return  (void *)(uint64_t)Node->input_nodes[InputIndex];
 }
 
-int PGNodeGetNumOutputs(PGNode_t * Node)
+PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex)
 {
-    return Node->spec->NumOutputs;
+    return (void *)(uint64_t)Node->output_nodes[OutputIndex][NodeIndex];
 }
 
 int PGNodeGetNumNodesAtOutput(PGNode_t * Node, int OutputIndex)
@@ -80,7 +86,16 @@ int PGNodeGetNumNodesAtOutput(PGNode_t * Node, int OutputIndex)
     return Node->output_node_counts[OutputIndex];
 }
 
-PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex)
+
+
+
+
+int PGNodeGetNumInputs(PGNode_t * Node)
 {
-    return (void *)(uint64_t)Node->output_nodes[OutputIndex][NodeIndex];
+    return Node->spec->NumInputs;
+}
+
+int PGNodeGetNumOutputs(PGNode_t * Node)
+{
+    return Node->spec->NumOutputs;
 }

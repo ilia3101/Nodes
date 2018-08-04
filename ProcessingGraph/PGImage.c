@@ -18,15 +18,26 @@
 PGImage_t * new_PGImage(int Width, int Height)
 {
     PGImage_t * image = malloc(sizeof(PGImage_t));
+
     image->data = malloc(Width * Height * sizeof(float) * 4);
     image->width = Width;
     image->height = Height;
+    image->loc_x = 0;
+    image->loc_y = 0;
+
     return image;
 }
 
 float * PGImageGetDataPointer(PGImage_t * Image)
 {
     return Image->data;
+}
+
+void PGImageSetDimensions(PGImage_t * Image, int NewWidth, int NewHeight)
+{
+    Image->width = NewWidth;
+    Image->height = NewHeight;
+    Image->data = realloc(Image->data, NewWidth*NewHeight*sizeof(float));
 }
 
 int PGImageGetWidth(PGImage_t * Image)

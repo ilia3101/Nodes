@@ -8,6 +8,9 @@
 PGImage_t * new_PGImage(int Width, int Height);
 void delete_PGImage(PGImage_t * Image);
 
+/* Usefl setters */
+void PGImageSetDimensions(PGImage_t * Image, int NewWidth, int NewHeight);
+
 /* Usefull getters */
 float * PGImageGetDataPointer(PGImage_t * Image);
 int PGImageGetWidth(PGImage_t * Image);

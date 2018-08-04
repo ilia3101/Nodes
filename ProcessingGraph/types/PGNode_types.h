@@ -27,7 +27,7 @@ typedef union {
 
 /* What a node returns as output */
 typedef struct {
-    PGNodeDataType_t type;
+    PGNodeDataType_t type; /* If this is 0, this output is empty */
     union {
         PGImage_t * image;
         PGColour_t colour;
@@ -45,7 +45,8 @@ typedef struct PGNode
     int changed; /* Nodes going to it have been changed, so re-render */
 
 
-    /* Outputs and inputs are stored as indexes of other nodes */
+    /* Outputs and inputs are indexes of other nodes (in the graph),
+     * an index value of -1 represents no connected node */
 
     /* Inputs */
     int * input_nodes; /* Which nodes are inputs */
@@ -60,7 +61,7 @@ typedef struct PGNode
     /* Parameters */
     PGNodeParameterState_t * parameter_states;
 
-    /* Node (NodeSpec things) may put any of it's own data here */
+    /* Node class may put any of it's own data here */
     void * own_data;
 
     /* The node spec */
@@ -109,8 +110,9 @@ struct PGNodeSpec
     char * Category; /*  */
 
     int NumOutputs;
-    int NumInputs;
     PGNodeDataType_t * OutputTypes; /* What data type each output returns */
+    int NumInputs;
+    PGNodeDataType_t * InputTypes; /* What data type each input accepts */
 
     /* Parameters for this node (to be used for interface) */
     int HasParameters; /* If this is true, node must do its own interface */
@@ -121,7 +123,7 @@ struct PGNodeSpec
     void (** OutputFunctions)(PGNode_t *, PGNodeOutput_t *);
 
     /* "init" - called at the end of intialisation */
-    void (* Init)(PGNode_t *, MemoryBank_t *);
+    void (* Init)(PGNode_t *);
     /* "UnInit" - called at end, before any memory freed */
     void (* UnInit)(PGNode_t *);
 
