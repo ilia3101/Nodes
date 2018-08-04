@@ -1,31 +1,29 @@
 compiler=$1
+compilerflags=$2
 
 mkdir buildoutput
 
 
-########################## make libProcessingGraph.so ##########################
-compilefiles=(PGGraph.c PGImage.c PGNode.c)
+############################ make ProcessingGraph.a ############################
+#without .c extension
+compilefiles=(PGGraph PGImage PGNode)
 
 #compile each file
 for file in ${compilefiles[@]}
 do
-    $compiler -c -fPIC $file -o buildoutput/$file.o
+    #compile file
+    $compiler $compilerflags -c $file.c -o buildoutput/$file.o
+    #add it to library archive ting
+    ar rvs buildoutput/MemoryBank.a buildoutput/$file.o
     if [ ! $? -eq 0 ]; then
         rm -rf buildoutput
         exit 1
     fi
 done
 
-#create the library ting
-$compiler buildoutput/*.o -shared -o buildoutput/libProcessingGraph.so
-if [ ! $? -eq 0 ]; then
-    rm -rf buildoutput
-    exit 1
-fi
 
 #don't need these anymore
 rm buildoutput/*.o
-
 
 
 ############################# make the node folder #############################

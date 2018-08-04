@@ -1,4 +1,4 @@
-# A highly yummy build script, superior to a makefile
+# Rule: static linking as much as possible (discovered the need for this manually)
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then buildstart=$(date +%s.%N); fi
 
@@ -9,7 +9,7 @@ failemojay=❌
 function endbuild {
 	echo " "
  	rm *.o 2> /dev/null
-	rm build_info.h 2> /dev/null dmndsfdsf
+	rm build_info.h 2> /dev/null
 	exit
 }
 function errormessage {
@@ -29,15 +29,12 @@ function successmessage {
 appname=ProcessingGraphApp
 compiler=gcc
 cppcompiler=g++
-flags="-std=c99 -O3 -Wall"
+compilerflags="-std=c99 -O3 -Wall"
 #system specific
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-	linkflags="-lstdc++ -lm"
-	#hacky bad, will need to be changed as new versions of libraw are out
-	librawurl=https://www.libraw.org/data/LibRaw-0.19.0-MacOSX.zip
-	librawfolder=LibRaw-0.19.0
+if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux
+	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -ldl"
+elif [[ "$OSTYPE" == "darwin"* ]]; then #mac
+	linkflags="-lstdc++ -lm -framework OpenGL -framework OpenGL"
 else
 	echo Unknown os
 fi
@@ -56,8 +53,9 @@ if [ ! -e libraw_r.a ]; then
 		case $yn in
 			[Yy]* )
 				echo "Downloading libraw_r.a ..."
-				wget -O ./libraw.zip $librawurl &> /dev/null
+				wget -O ./libraw.zip https://www.libraw.org/data/LibRaw-0.19.0-MacOSX.zip &> /dev/null
 				unzip libraw.zip &> /dev/null
+				librawfolder=LibRaw-0.19.0
 				cp ./$librawfolder/lib/libraw_r.a ./
 				rm libraw.zip &> /dev/null
 				rm -rf $librawfolder &> /dev/null
@@ -89,31 +87,31 @@ echo " "
 
 ######################## Create build info header file #########################
 echo Creating build_info.h...
-touch build_info
-echo "#ifndef _build_info_h_" > build_info
-echo "#define _build_info_h_" >> build_info
-echo >> build_info
-echo "#define BuildCCompiler \"$($compiler --version | head -n 1)\"" >> build_info
-echo "#define BuildCPPCompiler \"$($cppcompiler --version| head -n 1)\"" >>build_info
-echo "#define BuildDate" \"$(date)\" >> build_info
+touch build_info.h
+echo "#ifndef _build_info_h_" > build_info.h
+echo "#define _build_info_h_" >> build_info.h
+echo >> build_info.h
+echo "#define BuildCCompiler \"$($compiler --version | head -n 1)\"" >> build_info.h
+echo "#define BuildCPPCompiler \"$($cppcompiler --version| head -n 1)\"" >> build_info.h
+echo "#define BuildDate" \"$(date)\" >> build_info.h
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 	. /etc/os-release
-	echo "#define BuildSystem" \"$NAME" "$VERSION\" >> build_info
+	echo "#define BuildSystem" \"$NAME" "$VERSION\" >> build_info.h
 elif [[ "$OSTYPE" == "darwin"* ]]; then
 	echo "#define BuildSystem" \"$(sw_vers -productName)" "$(sw_vers \
-	-productVersion)" ("$(sw_vers -buildVersion)")"\" >> build_info
+	-productVersion)" ("$(sw_vers -buildVersion)")"\" >> build_info.h
 else
 	death "Unknown OS"
 fi
-echo >> build_info
-echo "#endif" >> build_info
+echo >> build_info.h
+echo "#endif" >> build_info.h
 successmessage "created build_info.h"
 echo " "
 
 
 
 ########################## Create buildoutput folder ###########################
-rm -rf buildoutput
+rm -rf buildoutput &> /dev/null
 echo Creating buildoutput folder...
 #this just won't fail will it
 mkdir buildoutput
@@ -158,13 +156,12 @@ echo " "
 
 
 ############################ Build all the libraries ###########################
-libraries=(ProcessingGraph MemoryBank)
-# libraries=ProcessingGraph
+libraries=(MemoryBank ProcessingGraph)
 echo "Building libraries ..."
 for library in ${libraries[@]}
 do
 	cd ../$library > /dev/null
-	./build.sh $compiler &> /dev/null
+	./build.sh $compiler $compilerflags &> /dev/null
 	if [ $? -eq 0 ]; then
 		successmessage "Built $library"
 	else
@@ -172,8 +169,7 @@ do
 		death "Failed to build $library"
 	fi
 	#copy everything built to main build folder
-	for f in buildoutput/*
-	do 
+	for f in buildoutput/*; do 
 		cp -r $f $OLDPWD/$f
 	done
 	rm -rf buildoutput &> /dev/null
@@ -182,21 +178,53 @@ done
 echo " "
 
 
+######## Now compile C files that just need to be compiled on their own ########
+echo "Compiling any separate C files ..."
+# without .c extension
+cfiles=(main bitmap)
+for file in ${cfiles[@]}
+do
+	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> /dev/null
+	if [ $? -eq 0 ]; then
+		successmessage "Compiled $file.c"
+	else
+		rm -rf buildoutput &> /dev/null
+		death "Failed to compile $file.c"
+	fi
+done
+echo " "
+
+
 
 ##################################### Link #####################################
-echo Linking...
-cd buildoutput
-$compiler *.o libraw_r.a $linkflags -o $appname
+echo "Linking..."
+cd buildoutput &> /dev/null
+# create link command
+linkcommand=$compiler
+for file in ${cfiles[@]}
+do
+	linkcommand+=" "$file.o
+done
+for library in ${libraries[@]}
+do
+	linkcommand+=" "$library".a "
+done
+# linkcommand+=" -lraw"
+linkcommand+=" ../libraw_r.a"
+linkcommand+=" "$linkflags
+
+$linkcommand #&> /dev/null
 if [ $? -eq 0 ]; then
 	successmessage "done!"
 else
 	death "failed to link"
 fi
-cd -
+cd - &> /dev/null
+
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 buildtime=$(echo "scale=0; ($(date +%s.%N)-$buildstart)*10000.0/10.0" | bc -l)
-echo -e "\nbuild completed in $buildtime ms"
+echo -e "\nbuild completed in $buildtime""ms. See results in buildoutput folder."
 fi
 
 endbuild

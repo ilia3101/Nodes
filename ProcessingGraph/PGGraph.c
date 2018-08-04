@@ -6,8 +6,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <alloca.h>
-#include <dirent.h>
 #include <time.h>
+#include <dirent.h>
+/* TODO: FIX 4 WINDOWS */
+#ifndef WIN32
+#include <dlfcn.h>
+#endif
 
 #include "../MemoryBank/MemoryBank.h"
 
@@ -15,18 +19,48 @@
 #include "ProcessingGraph.h"
 #include "PGGraph.h"
 
-/* All node types in the library. GLoabal, yes */
-static PGNodeSpec_t * pg_node_types = NULL;
+int pg_library_initialised = 0;
 
-void pg_graph_load_node(PGGraph_t * Graph, char * NodeFilePath)
+/* All node types in the library. GLoabal, yes */
+int pg_num_node_types = 0;
+PGNodeSpec_t ** pg_node_types = NULL;
+void ** pg_node_dlls = NULL; /* Pointers to dlopen/LoadLibrary returns */
+
+void ProcessingGraphLoadNodeFromFile(char * NodeFilePath)
 {
-    return;
+    /* This works everywhere but Windows (TODO: add LoadLibrary) */
+    void * node = dlopen(NodeFilePath, RTLD_LAZY);
+    if (node == NULL) {
+        fprintf(stderr, "Couldn't load node plugin...\n%s\n", dlerror());
+        return;
+    }
+
+    ++pg_num_node_types;
+
+    pg_node_dlls = realloc(pg_node_dlls, pg_num_node_types*sizeof(void *));
+    pg_node_types = realloc( pg_node_types,
+                             pg_num_node_types * sizeof(PGNodeSpec_t *) );
+
+    PGNodeSpec_t * (* node_get_spec)() = dlsym(node, "PGNodeGetSpec");
+
+    if (node_get_spec == NULL) {
+        fprintf(stderr, "Didn't find PGNodeGetSpec...\n%s\n", dlerror());
+        return;
+    }
+
+    pg_node_types[pg_num_node_types-1] = node_get_spec();
+    pg_node_dlls[pg_num_node_types-1] = node;
 }
 
 /* Must be called before using the library. Loads all node plugins in to the
  * pg_node_types array (first time I ever found a global variable useful) */
 void InitialiseProcessingGraphLibrary(char * NodeDirectory)
 {
+    if (pg_library_initialised) return;
+
+    pg_node_types == malloc(sizeof(PGNodeSpec_t *));
+    pg_node_dlls == malloc(sizeof(void *));
+
     /* Add all node types in the node type category */
     DIR * dir = opendir(NodeDirectory);
     if (dir != NULL)
@@ -34,12 +68,19 @@ void InitialiseProcessingGraphLibrary(char * NodeDirectory)
         /* print all the files and directories within directory */
         struct dirent * ent;
         while ((ent = readdir(dir)) != NULL)
-            printf ("%s\n", ent->d_name);
+        {
+            size_t pathlen = strlen(NodeDirectory)+strlen(ent->d_name)+2;
+            char * path = alloca(pathlen);
+            snprintf(path, pathlen, "%s/%s", NodeDirectory, ent->d_name);
+            ProcessingGraphLoadNodeFromFile(path);
+        }
         closedir(dir);
+
+        pg_library_initialised = 1;
     }
-    else {
-        /* could not open directory */
-        perror ("");
+    else
+    {
+        perror("Couldn't load node plugins");
     }
 }
 
