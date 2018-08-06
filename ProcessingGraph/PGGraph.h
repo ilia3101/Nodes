@@ -5,12 +5,15 @@
 #include "types/PGTypes.h"
 
 /* New graph, needs node directory to function */
-PGGraph_t * new_PGGraph(char * NodeDirectory);
+PGGraph_t * new_PGGraph();
 
 /* Gets the output of a node */
 PGImage_t * PGGraphGetOutput(PGGraph_t * Graph);
 
-/* Will probably be one of the node types obtained from above functions */
-void PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * NodeType);
+/* Return value is index of the node */
+int PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * NodeType);
+
+/* Get pointer to node */
+PGNode_t * PGGraphGetNode(PGGraph_t * Graph, int Index);
 
 #endif

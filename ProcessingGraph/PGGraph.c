@@ -15,7 +15,7 @@
 #include "PGGraph.h"
 
 
-PGGraph_t * new_PGGraph(char * NodeDirectory)
+PGGraph_t * new_PGGraph()
 {
     if (!ProcessingGraphInitialised())
     {
@@ -33,17 +33,20 @@ PGGraph_t * new_PGGraph(char * NodeDirectory)
     return graph;
 }
 
-
-void PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * Type)
+int PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * Type)
 {
     Graph->nodes = MBRealloc( Graph->memory_bank, Graph->nodes,
                               sizeof(PGNode_t *) * (Graph->num_nodes+1) );
 
     Graph->nodes[Graph->num_nodes] = new_PGNode(Type, Graph);
 
-    ++Graph->num_nodes;
+    return Graph->num_nodes++;
 }
 
+PGNode_t * PGGraphGetNode(PGGraph_t * Graph, int Index)
+{
+    return Graph->nodes[Index];
+}
 
 /* Gets the output of a node */
 PGImage_t * PGGraphGetOutput(PGGraph_t * Graph)

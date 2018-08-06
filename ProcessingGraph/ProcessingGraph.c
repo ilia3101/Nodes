@@ -6,7 +6,7 @@
 #include <alloca.h>
 #include <time.h>
 
-/* TODO: Make this file work on WINDOWS */
+/* TODO: Make this code file work on WINDOWS (windows.h/LoadLibrary) */
 #ifndef WIN32
 #include <dirent.h>
 #include <dlfcn.h>
@@ -30,7 +30,7 @@ static void ** pg_node_dlls = NULL; /* Pointers to dlopen/LoadLibrary returns */
 void ProcessingGraphLoadNodeFromFile(char * NodeFilePath)
 {
     /* This works everywhere but Windows (TODO: add LoadLibrary) */
-    void * node = dlopen(NodeFilePath, RTLD_LAZY);
+    void * node = dlopen(NodeFilePath, RTLD_NOW);
     if (node == NULL)
     {
         fprintf(stderr, "Couldn't load node plugin...\n%s\n", dlerror());
@@ -101,7 +101,15 @@ int ProcessingGraphGetNumNodeTypes()
     return pg_num_node_types;
 }
 
-PGNodeSpec_t ** PGGraphGetNodeTypes()
+PGNodeSpec_t ** ProcessingGraphGetNodeTypes()
 {
     return pg_node_types;
+}
+
+void * ProcessingGraphGetNodeDLLHandle(int NodeIndex)
+{
+    if (NodeIndex < pg_num_node_types && NodeIndex >= 0)
+        return pg_node_dlls[NodeIndex];
+    else
+        return NULL;
 }

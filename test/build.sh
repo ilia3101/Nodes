@@ -33,9 +33,9 @@ cppcompiler=g++
 compilerflags="-std=c99 -O3 -Wall"
 #system specific
 if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux
-	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -ldl"
+	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -ldl -rdynamic"
 elif [[ "$OSTYPE" == "darwin"* ]]; then #mac
-	linkflags="-lstdc++ -lm -framework OpenGL -framework OpenGL"
+	linkflags="-lstdc++ -lm -framework OpenGL -framework OpenGL -ldl -rdynamic"
 else
 	echo Unknown os
 fi

@@ -10,10 +10,10 @@
 
 
 /* This node only needs one output function */
-void en_output_function(PGNode_t * Node, PGNodeOutput_t * Output)
+static void output_function(PGNode_t * Node, PGNodeOutput_t * Output)
 {
-    PGNodeGetOutput( PGNodeGetInputNode(Node, 0),
-                     PGNodeGetInputNodeOutputIndex(Node, 0) );
+    // PGNodeGetOutput( PGNodeGetInputNode(Node, 0),
+    //                  PGNodeGetInputNodeOutputIndex(Node, 0) );
 }
 
 // PGNodeOutput_t PGNodeSpecGetOutputFunction(PGNode_t * Node, int FunctionIndex)
@@ -25,12 +25,12 @@ void en_output_function(PGNode_t * Node, PGNodeOutput_t * Output)
 //     return output;
 // }
 
-void en_init(PGNode_t * Node)
+static void init(PGNode_t * Node)
 {
     return;
 }
 
-void en_uninit(PGNode_t * Node)
+static void uninit(PGNode_t * Node)
 {
     return;
 }
@@ -38,7 +38,6 @@ void en_uninit(PGNode_t * Node)
 
 static PGNodeDataType_t en_output_types[] = {PGNodeImageOutput};
 static PGNodeDataType_t en_input_types[] = {PGNodeImageOutput};
-static void (*output_func[1])(PGNode_t*,PGNodeOutput_t*)={&en_output_function};
 
 static PGNodeSpec_t en_spec =
 {
@@ -47,9 +46,9 @@ static PGNodeSpec_t en_spec =
     .Category = "Basics",
 
     .NumOutputs = 1,
-    .OutputTypes = en_output_types,
+    .OutputTypes = {PGNodeImageOutput},
     .NumInputs = 1,
-    .InputTypes = en_input_types,
+    .InputTypes = {PGNodeImageOutput},
 
     .HasParameters = 1,
     .NumParameters = 1,
@@ -61,10 +60,10 @@ static PGNodeSpec_t en_spec =
                                             .MaxValue = 4.0,
                                             .DefaultValue = 0.0 },
 
-    .OutputFunctions = output_func,
+    .OutputFunctions = {&output_function},
 
-    .Init = &en_init,
-    .UnInit = &en_uninit
+    .Init = &init,
+    .UnInit = &uninit
 
 };
 

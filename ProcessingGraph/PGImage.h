@@ -5,6 +5,7 @@
 #include "types/PGImage_types.h"
 #include "types/PGTypes.h"
 
+
 PGImage_t * new_PGImage(int Width, int Height);
 void delete_PGImage(PGImage_t * Image);
 
@@ -16,5 +17,6 @@ float * PGImageGetDataPointer(PGImage_t * Image);
 int PGImageGetWidth(PGImage_t * Image);
 int PGImageGetHeight(PGImage_t * Image);
 PGColour_t PGImageGetColour(PGImage_t * Image, int X, int Y);
+
 
 #endif

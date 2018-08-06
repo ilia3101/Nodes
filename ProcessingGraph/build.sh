@@ -6,7 +6,7 @@ mkdir buildoutput
 
 ############################ make ProcessingGraph.a ############################
 #without .c extension
-compilefiles=(PGGraph PGImage PGNode ProcessingGraph)
+compilefiles=(ProcessingGraph PGGraph PGImage PGNode)
 
 #compile each file
 for file in ${compilefiles[@]}
@@ -31,7 +31,7 @@ mkdir buildoutput/DefaultNodes
 buildnodes=(PGExposureNode PGImageInputNode)
 for node in ${buildnodes[@]}
 do
-    $compiler -shared -o buildoutput/DefaultNodes/$node.so -fPIC DefaultNodes/$node.c
+    $compiler $compilerflags -shared -fPIC DefaultNodes/$node.c  -o buildoutput/DefaultNodes/$node.so
     if [ ! $? -eq 0 ]; then
         rm -rf buildoutput
         exit 1
