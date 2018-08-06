@@ -9,7 +9,7 @@
 #include "../ProcessingGraph.h"
 
 
-PGImage_t * PGOutputNodeGetOutput()
+PGImage_t * PGOutputNodeGetOutput(PGNode_t * Node)
 {
     return NULL;
 }
@@ -49,10 +49,7 @@ static PGNodeSpec_t spec =
 };
 
 
-PGNodeSpec_t * PGNodeGetSpec()
+PGNodeSpec_t * GetNodeSpec()
 {
-    // ii_spec.Init = ii_init;
-    /* Set pointer in output function array to the output function */
-    // ii_output_functions[0] = &ii_output_function;
     return &spec;
 }

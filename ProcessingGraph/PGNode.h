@@ -28,5 +28,6 @@ int PGNodeGetInputNodeOutputIndex(PGNode_t * Node, int InputIndex);
 int PGNodeGetNumOutputs(PGNode_t * Node);
 int PGNodeGetNumNodesAtOutput(PGNode_t * Node, int OutputIndex);
 PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex);
+PGNodeSpec_t * PGNodeGetSpec(PGNode_t * Node);
 
 #endif

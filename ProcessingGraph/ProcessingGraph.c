@@ -37,10 +37,10 @@ void ProcessingGraphLoadNodeFromFile(char * NodeFilePath)
         return;
     }
 
-    PGNodeSpec_t * (* node_get_spec)() = dlsym(node, "PGNodeGetSpec");
+    PGNodeSpec_t * (* node_get_spec)() = dlsym(node, "GetNodeSpec");
     if (node_get_spec == NULL)
     {
-        fprintf(stderr, "Didn't find PGNodeGetSpec...\n%s\n", dlerror());
+        fprintf(stderr, "Didn't find GetNodeSpec...\n%s\n", dlerror());
         return;
     }
 

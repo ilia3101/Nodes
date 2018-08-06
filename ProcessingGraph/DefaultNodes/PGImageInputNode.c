@@ -38,6 +38,7 @@ static void output_function(PGNode_t * Node, PGNodeOutput_t * Output)
     //                  PGNodeGetInputNodeOutputIndex(Node, 0) );
 }
 
+
 static void init(PGNode_t * Node)
 {
     puts("\n\n\nGREAT SUCCESS!!!\n\n\n");
@@ -45,13 +46,38 @@ static void init(PGNode_t * Node)
     return;
 }
 
+
 static void uninit(PGNode_t * Node)
 {
     return;
 }
 
-
-PGNodeDataType_t output_types[] = {PGNodeImageOutput};
+static PGNodeParameterSpec_t parameters[] =
+{
+    {
+        .Name = "Pointer",
+        .Description = "Pointer to RAM location of image",
+        .Type = 0, /* Range */
+        .Integers = 0, /* Continous */
+        .LimitRange = 0,
+        .DefaultValue = 0.0
+    },
+    {
+        .Name = "Width",
+        .Description = "How many pixels wide the image is",
+        .Type = 0, /* Range */
+        .Integers = 1,
+        .LimitRange = 0,
+        .DefaultValue = 0.0
+    },
+    {
+        .Name = "Height",
+        .Description = "How many pixels high the image is",
+        .Type = 0, /* Range */
+        .LimitRange = 0,
+        .DefaultValue = 0.0
+    }
+};
 
 static PGNodeSpec_t spec =
 {
@@ -64,9 +90,9 @@ static PGNodeSpec_t spec =
     .NumInputs = 0,
     .InputTypes = NULL,
 
-    .HasParameters = 0,
-    .NumParameters = 0,
-    .Parameters = NULL,
+    .HasParameters = 1,
+    .NumParameters = 3,
+    .Parameters = parameters,
 
     .OutputFunctions = {&output_function},
 
@@ -74,8 +100,7 @@ static PGNodeSpec_t spec =
     .UnInit = uninit
 };
 
-
-PGNodeSpec_t * PGNodeGetSpec()
+PGNodeSpec_t * GetNodeSpec()
 {
     // ii_spec.Init = ii_init;
     /* Set pointer in output function array to the output function */

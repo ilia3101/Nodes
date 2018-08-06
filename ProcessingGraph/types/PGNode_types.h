@@ -3,9 +3,6 @@
 
 #include "../../MemoryBank/MemoryBank.h"
 
-/* A kind of forward declaration */
-typedef struct PGNodeSpec PGNodeSpec_t;
-
 
 /* This is the output type, they can be ORed to represent a node that can
  * output / accept as input different types */
@@ -15,7 +12,6 @@ typedef int PGNodeDataType_t;
 #define PGNodeArrayOutput 0x04
 #define PGNodeValueOutput 0x04
 /* ... 0x08, 0x10, 0x20, 0x40, 0x80 */
-
 
 typedef union {
     float value; /* Range */
@@ -36,10 +32,16 @@ typedef struct {
     } value;
 } PGNodeOutput_t;
 
+
+/* A kind of forward declaration */
+typedef struct PGNodeSpec PGNodeSpec_t;
+typedef struct PGNode PGNode_t;
+
+
 /* The node itself */
 typedef struct PGNode
 {
-    /* Graph which owns this node */
+    /* Graph which owns this node... */
     /* PGGraph_t */void * graph;
 
     int changed; /* Nodes going to it have been changed, so re-render */
@@ -49,13 +51,13 @@ typedef struct PGNode
      * an index value of -1 represents no connected node */
 
     /* Inputs */
-    int * input_nodes; /* Which nodes are inputs */
-    int * input_node_output_index; /* Which output of which node is used */
+    struct PGNode ** input_nodes; /* Which nodes are inputs */
+    int * input_node_output_indexes; /* Which output of which node is used */
 
     /* Outputs */
-    int ** output_nodes; /* One output can go to many nodes' inputs */
+    struct PGNode* **output_nodes; /* One output can go to many nodes' inputs */
     int * output_node_counts; /* Number of nodes getting each output */
-    PGNodeOutput_t * outputs; /* The node's outputs are here */
+    PGNodeOutput_t * outputs; /* The node's outputs are stored here */
 
 
     /* Parameters */
@@ -70,20 +72,23 @@ typedef struct PGNode
     /* Memory things */
     MemoryBank_t * memory_bank;
 
-} PGNode_t;
+};
 
 
+
+/* All attributes in PGNodeSpec PGNodeParamaterSpec are public (to read only) */
 
 typedef struct
 {
     char * Name;
     char * Description; /* NULL if u want */
 
-    /* 0=Range, 1=Options(drop down), 2=Toggle(on/off), 3=Text, 4=FilePath */
+    /* 0=Value, 1=Options(drop down), 2=Toggle(on/off), 3=Text, 4=FilePath */
     int Type;
 
-    /* Range (slider) */
+    /* Value (slider) */
     int Integers; /* If this is true, it will al be in whole numbers */
+    int LimitRange;
     float MinValue;
     float MaxValue;
     float DefaultValue;
@@ -120,7 +125,7 @@ struct PGNodeSpec
     PGNodeParameterSpec_t * Parameters;
 
     /* Array of output functions */
-    void (** OutputFunctions)(PGNode_t *, PGNodeOutput_t *);
+    void (** OutputFunctions)(PGNode_t *);
 
     /* "init" - called at the end of intialisation */
     void (* Init)(PGNode_t *);

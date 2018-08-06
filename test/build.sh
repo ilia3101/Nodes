@@ -157,7 +157,7 @@ echo " "
 
 
 ############################ Build all the libraries ###########################
-libraries=(ProcessingGraph MemoryBank)
+libraries=(ProcessingGraph MemoryBank JSONParser GraphJSON)
 echo "Building libraries ..."
 for library in ${libraries[@]}
 do
@@ -194,7 +194,7 @@ touch .output
 for file in ${cfiles[@]}
 do
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
-	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> /dev/null
+	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> .output
 	if [ $? -eq 0 ]; then
 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)

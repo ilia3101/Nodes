@@ -5,6 +5,10 @@
 
 #include "types/PGTypes.h"
 
+#include "PGGraph.h"
+#include "PGImage.h"
+#include "PGNode.h"
+
 /* Call before using the library */
 void ProcessingGraphInitialiseLibrary(char * NodeDirectory);
 int ProcessingGraphInitialised(); /* To check if previous function called */
@@ -16,10 +20,5 @@ int ProcessingGraphGetNumNodeTypes();
 PGNodeSpec_t ** ProcessingGraphGetNodeTypes();
 void * ProcessingGraphGetNodeDLLHandle(int NodeIndex);
 
-
-/* All the important functions are in the following headers */
-#include "PGGraph.h"
-#include "PGImage.h"
-#include "PGNode.h"
 
 #endif

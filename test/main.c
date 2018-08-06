@@ -16,6 +16,8 @@ extern void writebmp(uint8_t * data, int width, int height, char * imagename);
 
 #include "../librawheaders/libraw.h"
 #include "../ProcessingGraph/ProcessingGraph.h"
+#include "../JSONParser/JSONParser.h"
+#include "../GraphJSON/GraphJSON.h"
 
 
 int main(int argc, char ** argv)
@@ -95,6 +97,9 @@ int main(int argc, char ** argv)
     puts(" ");
 
 
+    /* Just does nothing, this node */
+    PGGraphAddNode(graph, nodes[1]);
+
     int node_index = PGGraphAddNode(graph, nodes[1]);
 
     void * dll = ProcessingGraphGetNodeDLLHandle(1);
@@ -104,6 +109,23 @@ int main(int argc, char ** argv)
 
 
     set_image_data(PGGraphGetNode(graph, node_index), raw_float, width, height);
+
+
+    /* Add output node */
+    int output_node_index = PGGraphAddNode(graph, nodes[2]);
+    PGGraphGetNode(graph, output_node_index);
+
+    PGNodeConnect(PGGraphGetNode(graph, output_node_index), 0, PGGraphGetNode(graph, node_index), 0);
+    PGNodeDisconnect(PGGraphGetNode(graph, output_node_index), 0, PGGraphGetNode(graph, node_index), 0);
+    PGNodeConnect(PGGraphGetNode(graph, output_node_index), 0, PGGraphGetNode(graph, node_index), 0);
+
+    // new_EmptyJSONArray(NULL, 2);
+
+    PGImage_t * output = PGGraphGetOutput(graph);
+
+    /****** JSON TEST ******/
+    JSONBlock_t * jsongraph = PGGraphToJSON(graph);
+    WriteJSON(jsongraph, 1, stdout);
 
     /**************************************************************************/
 

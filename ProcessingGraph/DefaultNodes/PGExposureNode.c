@@ -16,15 +16,6 @@ static void output_function(PGNode_t * Node, PGNodeOutput_t * Output)
     //                  PGNodeGetInputNodeOutputIndex(Node, 0) );
 }
 
-// PGNodeOutput_t PGNodeSpecGetOutputFunction(PGNode_t * Node, int FunctionIndex)
-// {
-//     /* PGNodeGetInput(index 0) */
-//     PGNodeOutput_t output = { .type = PGNodeImageOutput, 
-//                               .value.image = new_PGImage(600, 600) };
-
-//     return output;
-// }
-
 static void init(PGNode_t * Node)
 {
     return;
@@ -36,10 +27,7 @@ static void uninit(PGNode_t * Node)
 }
 
 
-static PGNodeDataType_t en_output_types[] = {PGNodeImageOutput};
-static PGNodeDataType_t en_input_types[] = {PGNodeImageOutput};
-
-static PGNodeSpec_t en_spec =
+static PGNodeSpec_t spec =
 {
     .Name = "Exposure",
     .Description = "Adjust exposure of an image",
@@ -56,6 +44,7 @@ static PGNodeSpec_t en_spec =
                                             .Description = "Exposure in stops",
                                             .Type = 0, /* Range */
                                             .Integers = 0, /* Continous */
+                                            .LimitRange = 1,
                                             .MinValue = -4.0,
                                             .MaxValue = 4.0,
                                             .DefaultValue = 0.0 },
@@ -64,12 +53,11 @@ static PGNodeSpec_t en_spec =
 
     .Init = &init,
     .UnInit = &uninit
-
 };
 
 
-PGNodeSpec_t * PGNodeGetSpec()
+PGNodeSpec_t * GetNodeSpec()
 {
     /* Set pointer in output function array to the output function */
-    return &en_spec;
+    return &spec;
 }
