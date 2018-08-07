@@ -152,6 +152,7 @@ JSONBlock_t * parse_json(JSONBlock_t * Parent, char ** Tokens, int * TokenLength
     switch(**Tokens) /* Is start of a block */
     {
     case '{':
+    {
         int num_attributes = 0;
 
         /* Count number of elements in array */
@@ -180,9 +181,11 @@ JSONBlock_t * parse_json(JSONBlock_t * Parent, char ** Tokens, int * TokenLength
         }
 
         parse_offset = offset;
-        break;
+    }
+    break;
 
     case '[':
+    {
         int num_elements = 0;
 
         /* Count number of elements in array */
@@ -198,14 +201,14 @@ JSONBlock_t * parse_json(JSONBlock_t * Parent, char ** Tokens, int * TokenLength
         for (int i = 0; i < num_elements; ++i)
         {
             int extra_offset;
-            json->value.object_or_array.elements[i] = parse_json( json, Tokens+offset,
-                                                                    TokenLengths+offset, &extra_offset );
+            json->value.object_or_array.elements[i] = parse_json(json,Tokens+offset,TokenLengths+offset,&extra_offset);
             offset += extra_offset;
             ++offset; /* To pass the comma */
         }
 
         parse_offset = offset;
-        break;
+    }
+    break;
 
     case '"':
         json = new_JSONString(Parent, NULL);
@@ -351,7 +354,8 @@ void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket
         for (int e = 0; e < JSON->value.object_or_array.num_elements; ++e)
         {
             json_print_tabs(LevelsIn+1, Out);
-            fprintf(Out, "\"%s\": ", JSON->value.object_or_array.element_names[e]);
+            fprintf(Out, "\"%s\":", JSON->value.object_or_array.element_names[e]);
+            if (!NewLineBracket) fprintf(Out, " ");
             write_json(JSON->value.object_or_array.elements[e], Out, LevelsIn+1, NewLineBracket);
             if (e!=JSON->value.object_or_array.num_elements-1) fprintf(Out, ",");
             fprintf(Out, "\n");
@@ -360,39 +364,52 @@ void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket
         fprintf(Out, "}");
         break;
 
-    case JSONArray:
-        if (NewLineBracket && LevelsIn != 0)
+    case JSONArray: {
+        /* If there are no arrays or objects within the array, we can put it all on one line  */
+        int print_on_one_line = 0;
+        for (int e = 0; e < JSON->value.object_or_array.num_elements; ++e)
+        {
+            if ( JSONBlockGetType(JSON->value.object_or_array.elements[e]) == JSONObject ||
+                 JSONBlockGetType(JSON->value.object_or_array.elements[e]) == JSONObject )
+            {
+                 print_on_one_line = 1;
+                 break;
+            }
+        }
+        if (NewLineBracket && LevelsIn != 0 && print_on_one_line)
         {
             fprintf(Out, "\n");
             json_print_tabs(LevelsIn, Out);
         }
         fprintf(Out, "[");
-        if ((JSONBlockGetType(JSON->value.object_or_array.elements[0]) != JSONObject &&
-                JSONBlockGetType(JSON->value.object_or_array.elements[0]) != JSONArray) ||
-                !NewLineBracket )
+        if (((JSONBlockGetType(JSON->value.object_or_array.elements[0]) != JSONObject &&
+              JSONBlockGetType(JSON->value.object_or_array.elements[0]) != JSONArray) ||
+              !NewLineBracket ) && print_on_one_line)
         {
             fprintf(Out, "\n");
         }
         
         for (int e = 0; e < JSON->value.object_or_array.num_elements; ++e)
         {
-            json_print_tabs(LevelsIn+1, Out);
+            if (print_on_one_line)
+                json_print_tabs(LevelsIn+1, Out);
             write_json(JSON->value.object_or_array.elements[e], Out, LevelsIn+1, NewLineBracket);
             if (e != JSON->value.object_or_array.num_elements-1)
             {
                 fprintf(Out, ",");
-                if ((JSONBlockGetType(JSON->value.object_or_array.elements[e+1]) != JSONObject &&
-                        JSONBlockGetType(JSON->value.object_or_array.elements[e+1]) != JSONArray) ||
-                        !NewLineBracket )
+                if (((JSONBlockGetType(JSON->value.object_or_array.elements[e+1]) != JSONObject &&
+                      JSONBlockGetType(JSON->value.object_or_array.elements[e+1]) != JSONArray) ||
+                      !NewLineBracket ) && print_on_one_line)
                 {
                     fprintf(Out, "\n");
                 }
             }
-            else fprintf(Out, "\n");
+            else if (print_on_one_line) fprintf(Out, "\n");
         }
-        json_print_tabs(LevelsIn, Out);
+        if (print_on_one_line)
+            json_print_tabs(LevelsIn, Out);
         fprintf(Out, "]");
-        break;
+    } break;
 
     case JSONNumber:
         fprintf(Out, "%.10lg", JSON->value.numerical_value);
@@ -532,11 +549,10 @@ JSONBlock_t * new_JSONString(JSONBlock_t * Parent, char * Text)
 
     string->type = JSONString;
 
-    if (Text != NULL)
-    {
-        string->value.text = MBMalloc(Parent->memory_bank, sizeof(char) * (strlen(Text)+1));
-        strcpy(string->value.text, Text);
-    }
+    if (Text == NULL) Text = "";
+
+    string->value.text = MBMalloc(Parent->memory_bank, sizeof(char) * (strlen(Text)+1));
+    strcpy(string->value.text, Text);
 
     return string;
 }
@@ -610,6 +626,46 @@ int JSONArrayGetLength(JSONBlock_t * Array)
 int JSONObjectGetNumAttributes(JSONBlock_t * Object)
 {
     return JSONArrayGetLength(Object); /* Interchangeable sometimes */
+}
+
+JSONBlock_t * JSONObjectGetAttributeByName(JSONBlock_t * Object, char * Name)
+{
+    for (int i = 0; i < Object->value.object_or_array.num_elements; ++i)
+    {
+        if (!strcmp(Object->value.object_or_array.element_names[i], Name))
+            return JSONArrayGetElement(Object, i);
+    }
+    return NULL;
+}
+
+JSONBlock_t * JSONObjectGetAttributeByIndex(JSONBlock_t * Object, int Index)
+{
+    return JSONArrayGetElement(Object, Index);
+}
+
+JSONBlock_t * JSONArrayGetElement(JSONBlock_t * Array, int Index)
+{
+    return Array->value.object_or_array.elements[Index];
+}
+
+char * JSONStringGetTextPointer(JSONBlock_t * String)
+{
+    return String->value.text;
+}
+
+char * JSONObjectGetAttributeName(JSONBlock_t * Object, int AttributeIndex)
+{
+    return Object->value.object_or_array.element_names[AttributeIndex];
+}
+
+double JSONNumberGetValue(JSONBlock_t * Number)
+{
+    return Number->value.numerical_value;
+}
+
+int JSONBooleanGetValue(JSONBlock_t *_Boolean)
+{
+    return _Boolean->value.boolean;
 }
 
 

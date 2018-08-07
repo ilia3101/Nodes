@@ -10,10 +10,35 @@
 
 
 /* This node only needs one output function */
-static void output_function(PGNode_t * Node, PGNodeOutput_t * Output)
+static void output_function(PGNode_t * Node)
 {
-    // PGNodeGetOutput( PGNodeGetInputNode(Node, 0),
-    //                  PGNodeGetInputNodeOutputIndex(Node, 0) );
+    PGImage_t * input = PGNodeGetInput(Node, 0)->value.image;
+
+    PGNodeOutput_t * output = &Node->outputs[0];
+
+    /* If this is output is unused... */
+    if (output->type == 0)
+    {
+        output->value.image = new_PGImage(1,1);
+        output->type = PGNodeImageOutput;
+    }
+
+    PGImage_t * img = output->value.image;
+    
+    /* Make image be right size */
+    PGImageSetDimensions(img, PGImageGetWidth(input), PGImageGetHeight(input));
+    printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
+    
+    float * dest = PGImageGetDataPointer(img);
+    float * src = PGImageGetDataPointer(input);
+
+    /* Becoz it's stops */
+    printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
+    float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
+
+    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*3;
+    for (size_t i = 0; i < sz; ++i)
+        dest[i] = src[i]*exposure_fac;
 }
 
 static void init(PGNode_t * Node)
@@ -26,6 +51,7 @@ static void uninit(PGNode_t * Node)
     return;
 }
 
+static void (* output_functions[])(PGNode_t *) = {&output_function};
 
 static PGNodeSpec_t spec =
 {
@@ -58,6 +84,9 @@ static PGNodeSpec_t spec =
 
 PGNodeSpec_t * GetNodeSpec()
 {
+
+    spec.OutputFunctions = output_functions;
+    printf("%p\n",spec.OutputFunctions[0]);
     /* Set pointer in output function array to the output function */
     return &spec;
 }

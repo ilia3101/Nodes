@@ -43,6 +43,29 @@ int PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * Type)
     return Graph->num_nodes++;
 }
 
+int PGGraphAddNodeByTypeName(PGGraph_t * Graph, char * NodeTypeName)
+{
+    PGNodeSpec_t * node_type = NULL;
+    PGNodeSpec_t ** node_types = ProcessingGraphGetNodeTypes();
+    int num_nodes = ProcessingGraphGetNumNodeTypes(Graph);
+    for (int i = 0; i < num_nodes; ++i)
+    {
+        if (!strcmp(node_types[i]->Name, NodeTypeName))
+        {
+            node_type = node_types[i];
+            break;
+        }
+    }
+
+    if (node_type == NULL)
+    {
+        printf("PGGraphAddNodeByTypeName: \"%s\" not found\n", NodeTypeName);
+        return -1;
+    }
+
+    return PGGraphAddNode(Graph, node_type);
+}
+
 int PGGraphGetNumNodes(PGGraph_t * Graph)
 {
     return Graph->num_nodes;
@@ -59,7 +82,7 @@ PGImage_t * PGGraphGetOutput(PGGraph_t * Graph)
     /* Find the output node... */
     PGNode_t * output_node = NULL;
     int num_nodes = PGGraphGetNumNodes(Graph);
-    for (int i = 0; i < 0; ++i)
+    for (int i = 0; i < num_nodes; ++i)
     {
         PGNode_t * node = PGGraphGetNode(Graph,i);
         if (!strcmp(PGNodeGetSpec(node)->Name, "Output"))
@@ -71,13 +94,11 @@ PGImage_t * PGGraphGetOutput(PGGraph_t * Graph)
 
     if (output_node == NULL)
     {
-        puts("No output node found in graph");
+        puts("PGGraphGetOutput: No output node found in graph.");
         return NULL;
     }
 
-    // PGNode_Output_t output = Node->output_functions[OutputIndex](Node);
-    // return output;
-    return NULL;
+    return PGNodeGetInput(output_node, 0)->value.image;
 }
 
 

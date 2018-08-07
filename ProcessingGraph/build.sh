@@ -28,7 +28,7 @@ rm buildoutput/*.o
 
 ############################# make the node folder #############################
 mkdir buildoutput/DefaultNodes
-buildnodes=(PGExposureNode PGImageInputNode PGGraphOutputNode)
+buildnodes=(PGExposureNode PGImageInputNode PGGraphOutputNode LibRawNode)
 for node in ${buildnodes[@]}
 do
     $compiler $compilerflags -shared -fPIC DefaultNodes/$node.c  -o buildoutput/DefaultNodes/$node.so

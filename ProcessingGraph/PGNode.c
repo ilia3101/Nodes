@@ -23,13 +23,13 @@ PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph)
 
     node->graph = Graph;
     node->spec = Spec;
-    node->input_nodes = MBMalloc(mb, Spec->NumInputs * sizeof(PGNode_t *));
-    for (int i = 0; i < Spec->NumInputs; ++i) node->input_nodes[i] = -1;
-    node->input_node_output_indexes = MBMalloc(mb, Spec->NumInputs*sizeof(int));
+    node->input_nodes = MBZeroAlloc(mb, Spec->NumInputs * sizeof(PGNode_t *));
+    node->input_node_output_indexes=MBZeroAlloc(mb,Spec->NumInputs*sizeof(int));
     node->output_nodes = MBMalloc(mb, Spec->NumOutputs * sizeof(PGNode_t **));
     for (int i = 0; i < Spec->NumOutputs; ++i)
         node->output_nodes[i] = MBZeroAlloc(mb, sizeof(PGNode_t *));
     node->output_node_counts = MBZeroAlloc(mb, sizeof(int) * Spec->NumOutputs);
+    node->outputs = MBZeroAlloc(mb, sizeof(PGNodeOutput_t) * Spec->NumOutputs);
     node->parameter_states = MBZeroAlloc(mb,
                             Spec->NumParameters*sizeof(PGNodeParameterState_t));
 
@@ -45,11 +45,11 @@ void delete_PGNode(PGNode_t * Node)
     delete_MemoryBank(Node->memory_bank);
 }
 
-PGNodeOutput_t PGNodeGetOutput(PGNode_t * Node, int OutputIndex)
+PGNodeOutput_t * PGNodeGetOutput(PGNode_t * Node, int OutputIndex)
 {
     /* TODO: add check if changed here for efficiency */
     PGNodeGetSpec(Node)->OutputFunctions[OutputIndex](Node);
-    return Node->outputs[OutputIndex];
+    return &Node->outputs[OutputIndex];
 }
 
 void PGNodeFlagChanged(PGNode_t * Node)
@@ -69,6 +69,13 @@ void PGNodeConnect( PGNode_t * Node,
                     PGNode_t * InputNode,
                     int InputNodeOutputIndex )
 {
+    /* First, disconnect if connected */
+    if (Node->input_nodes[NodeInputIndex] != NULL)
+        PGNodeDisconnect( Node,
+                          NodeInputIndex,
+                          Node->input_nodes[NodeInputIndex],
+                          Node->input_node_output_indexes[NodeInputIndex] );
+
     /* Set node input pointer */
     Node->input_nodes[NodeInputIndex] = InputNode;
     Node->input_node_output_indexes[NodeInputIndex] = InputNodeOutputIndex;
@@ -105,7 +112,12 @@ void PGNodeDisconnect( PGNode_t * Node,
                                   sizeof(PGNode_t *) * num-1 );
 }
 
-/* TODO: FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+PGNodeOutput_t * PGNodeGetInput(PGNode_t * Node, int InputIndex)
+{
+    return PGNodeGetOutput( PGNodeGetInputNode(Node, InputIndex),
+                            PGNodeGetInputNodeOutputIndex(Node, InputIndex) );
+}
+
 PGNode_t * PGNodeGetInputNode(PGNode_t * Node, int InputIndex)
 {
     return Node->input_nodes[InputIndex];
@@ -121,13 +133,10 @@ int PGNodeGetNumNodesAtOutput(PGNode_t * Node, int OutputIndex)
     return Node->output_node_counts[OutputIndex];
 }
 
-
 int PGNodeGetInputNodeOutputIndex(PGNode_t * Node, int InputIndex)
 {
     return Node->input_node_output_indexes[InputIndex];
 }
-
-
 
 int PGNodeGetNumInputs(PGNode_t * Node)
 {
@@ -142,4 +151,59 @@ int PGNodeGetNumOutputs(PGNode_t * Node)
 PGNodeSpec_t * PGNodeGetSpec(PGNode_t * Node)
 {
     return Node->spec;
+}
+
+void PGNodeSetValueParameter(PGNode_t * Node, int ParameterIndex, float Value)
+{
+    Node->parameter_states[ParameterIndex].value = Value;
+}
+
+void PGNodeSetOptionParameter(PGNode_t * Node, int ParameterIndex, int Option)
+{
+    Node->parameter_states[ParameterIndex].option = Option;
+}
+
+void PGNodeSetBooleanParameter(PGNode_t * Node, int ParameterIndex, int Value)
+{
+    Node->parameter_states[ParameterIndex].boolean = Value;
+}
+
+void PGNodeSetTextParameter(PGNode_t * Node, int ParameterIndex, char * Text)
+{
+    PGNodeParameterState_t * param = &Node->parameter_states[ParameterIndex];
+    if (param->text) MBFree(Node->memory_bank, param->text);
+    param->text = MBMalloc(Node->memory_bank, strlen(Text) * sizeof(char) + 1);
+    strcpy(param->text, Text);
+}
+
+void PGNodeSetFilePathParameter(PGNode_t * Node, int ParameterIndex, char* Path)
+{
+    PGNodeParameterState_t * param = &Node->parameter_states[ParameterIndex];
+    if (param->filepath) MBFree(Node->memory_bank, param->filepath);
+    param->filepath = MBMalloc(Node->memory_bank, strlen(Path)*sizeof(char)+1);
+    strcpy(param->filepath, Path);
+}
+
+float PGNodeGetValueParameterValue(PGNode_t * Node, int ParameterIndex)
+{
+    return Node->parameter_states[ParameterIndex].value;
+}
+
+int PGNodeGetOptionParameterValue(PGNode_t * Node, int ParameterIndex)
+{
+    return Node->parameter_states[ParameterIndex].option;
+}
+
+int PGNodeGetBooleanParameterValue(PGNode_t * Node, int ParameterIndex)
+{
+    return Node->parameter_states[ParameterIndex].boolean;
+}
+
+char * PGNodeGetTextParameterValue(PGNode_t * Node, int ParameterIndex)
+{
+    return Node->parameter_states[ParameterIndex].text;
+}
+char * PGNodeGetFilePathParameterValue(PGNode_t * Node, int ParameterIndex)
+{
+    return Node->parameter_states[ParameterIndex].filepath;
 }

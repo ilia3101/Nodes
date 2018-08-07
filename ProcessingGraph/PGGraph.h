@@ -12,6 +12,7 @@ PGImage_t * PGGraphGetOutput(PGGraph_t * Graph);
 
 /* Return value is index of the node */
 int PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * NodeType);
+int PGGraphAddNodeByTypeName(PGGraph_t * Graph, char * NodeTypeName);
 
 /* Get number of nodes in graph */
 int PGGraphGetNumNodes(PGGraph_t * Graph);

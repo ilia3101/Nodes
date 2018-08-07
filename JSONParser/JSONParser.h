@@ -39,6 +39,13 @@ void WriteJSON(JSONBlock_t * JSON, int BracketOnNewLine, FILE * Out);
 JSONObjectType_t JSONBlockGetType(JSONBlock_t * JSON);
 int JSONArrayGetLength(JSONBlock_t * Array);
 int JSONObjectGetNumAttributes(JSONBlock_t * Object);
+JSONBlock_t * JSONObjectGetAttributeByName(JSONBlock_t * Object, char * Name);
+JSONBlock_t * JSONObjectGetAttributeByIndex(JSONBlock_t * Object, int Index);
+JSONBlock_t * JSONArrayGetElement(JSONBlock_t * Array, int Index);
+char * JSONStringGetTextPointer(JSONBlock_t * String);
+char * JSONObjectGetAttributeName(JSONBlock_t * Object, int AttributeIndex);
+double JSONNumberGetValue(JSONBlock_t * Number);
+int JSONBooleanGetValue(JSONBlock_t *_Boolean);
 
 
 /* Setters */

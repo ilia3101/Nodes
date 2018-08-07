@@ -16,7 +16,7 @@ typedef int PGNodeDataType_t;
 typedef union {
     float value; /* Range */
     int option; /* Options */
-    int state; /* Toggle (0=off,1=on) */
+    int boolean; /* Toggle (0=off,1=on) */
     char * text; /* Memory owned by object */
     char * filepath; /* Same as previous */
 } PGNodeParameterState_t;
@@ -78,13 +78,19 @@ typedef struct PGNode
 
 /* All attributes in PGNodeSpec PGNodeParamaterSpec are public (to read only) */
 
+typedef int PGNodeParamaterType_t;
+#define PGNodeValueParameter 0
+#define PGNodeOptionsParameter 1
+#define PGNodeBooleanParameter 2
+#define PGNodeStringParameter 3
+#define PGNodeFilePathParameter 4
+
 typedef struct
 {
     char * Name;
     char * Description; /* NULL if u want */
 
-    /* 0=Value, 1=Options(drop down), 2=Toggle(on/off), 3=Text, 4=FilePath */
-    int Type;
+    PGNodeParamaterType_t Type;
 
     /* Value (slider) */
     int Integers; /* If this is true, it will al be in whole numbers */
@@ -107,6 +113,7 @@ typedef struct
 
 
 /* A node is defined using a PGNodeSpec_t, plugins return a pointer to theirs */
+/* Everything in NodeSpec is public and no methods are used to access it */
 struct PGNodeSpec
 {
     /* Name of the node */

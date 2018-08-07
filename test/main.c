@@ -96,39 +96,86 @@ int main(int argc, char ** argv)
     }
     puts(" ");
 
+    /* Does notihng, just for test purposes */
+    // PGGraphAddNode(graph, nodes[1]);
+    // PGGraphAddNode(graph, nodes[0]);
+    // PGGraphAddNode(graph, nodes[0]);
 
-    /* Just does nothing, this node */
-    PGGraphAddNode(graph, nodes[1]);
+    /* Exposure node */
+    PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNode(graph, nodes[0]));
+    PGNodeSetValueParameter(exposure_node, 0, 2.9);
 
-    int node_index = PGGraphAddNode(graph, nodes[1]);
-
-    void * dll = ProcessingGraphGetNodeDLLHandle(1);
-    void (* set_image_data)(PGNode_t *, float *, int, int) = dlsym(dll, "ImageInputNodeSetImageData");
-
-    // if (PGGraphGetNode(graph, node_index) == NULL) puts("GREAT FAIL");
-
-
-    set_image_data(PGGraphGetNode(graph, node_index), raw_float, width, height);
-
+    /* RAm input */
+    int image_input_node_index = PGGraphAddNode(graph, nodes[2]);
+    PGNode_t * image_input_node = PGGraphGetNode(graph, image_input_node_index);
+    char pointer_as_text[40];
+    sprintf(pointer_as_text, "%p", raw_float);
+    PGNodeSetTextParameter(image_input_node, 0, pointer_as_text);
+    PGNodeSetValueParameter(image_input_node, 1, width);
+    PGNodeSetValueParameter(image_input_node, 2, height);
 
     /* Add output node */
-    int output_node_index = PGGraphAddNode(graph, nodes[2]);
-    PGGraphGetNode(graph, output_node_index);
+    int output_node_index = PGGraphAddNode(graph, nodes[3]);
+    PGNode_t * output_node = PGGraphGetNode(graph, output_node_index);
+    // PGGraphGetNode(graph, output_node_index);
 
-    PGNodeConnect(PGGraphGetNode(graph, output_node_index), 0, PGGraphGetNode(graph, node_index), 0);
-    PGNodeDisconnect(PGGraphGetNode(graph, output_node_index), 0, PGGraphGetNode(graph, node_index), 0);
-    PGNodeConnect(PGGraphGetNode(graph, output_node_index), 0, PGGraphGetNode(graph, node_index), 0);
+    /* Output node input #0 to exposure node output #0 */
+    PGNodeConnect(output_node, 0, exposure_node, 0);
+    /* exposure node input #0 to RAMinput node output #0 */
+    PGNodeConnect(exposure_node, 0, image_input_node, 0);
 
-    // new_EmptyJSONArray(NULL, 2);
 
-    PGImage_t * output = PGGraphGetOutput(graph);
+    // PGImage_t * graph_output_image = PGGraphGetOutput(graph);
+    // graph_output_image = PGGraphGetOutput(graph);
+    
+    /**************************************************************************/
 
-    /****** JSON TEST ******/
+
+
+    /**************************** JSON STUFF TEST *****************************/
     JSONBlock_t * jsongraph = PGGraphToJSON(graph);
-    WriteJSON(jsongraph, 1, stdout);
+    WriteJSON(jsongraph, 0, stdout);
+    puts("");
+
+    FILE * jsonfile = fopen("json_graph.json", "wb+");
+    WriteJSON(jsongraph, 0, jsonfile);
+
+    fclose(jsonfile);
+    jsonfile = fopen("json_graph.json", "r");
+    char * text = calloc(100000, 1);
+    fseek(jsonfile, 0, SEEK_END);
+    int szz = ftell(jsonfile);
+    fseek(jsonfile, 0, SEEK_SET);
+    fread(text, szz, 1, jsonfile);
+
+    JSONBlock_t * graph_json = ParseJSON(text);
+    WriteJSON(graph_json, 0, jsonfile);
+
+    PGGraph_t * graph_made_from_json = JSONToPGGraph(graph_json);
+
+    /* Now run the graph read from JSON */
+     PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
 
     /**************************************************************************/
 
 
+
+    /* Now save the output produced from the graph */
+    printf("Image: %p\n", graph_output_image);
+    width = PGImageGetWidth(graph_output_image);
+    height = PGImageGetHeight(graph_output_image);
+    uint8_t * bmpimg_2 = malloc(width*height*3);
+    float * floatydata = PGImageGetDataPointer(graph_output_image);
+    for (int i = 0; i < width*height*3; ++i)
+    {
+        float val = floatydata[i]*255.0;
+        if (val > 255) val = 255;
+        bmpimg_2[i] = val;
+    }
+    writebmp(bmpimg_2, width, height, "pic_graph.bmp");
+
+
     return 0;
 }
+
+//cloc ../ProcessingGraph/ ../test/ ../JSONParser/ ../GraphJSON/ ../MemoryBank/

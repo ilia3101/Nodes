@@ -8,24 +8,15 @@
 /* This must be included */
 #include "../ProcessingGraph.h"
 
-
-PGImage_t * PGOutputNodeGetOutput(PGNode_t * Node)
-{
-    return NULL;
-}
-
-
 static void init(PGNode_t * Node)
 {
-    puts("\n\n\nCreated output node!!!\n\n\n");
+    return;
 }
-
 
 static void uninit(PGNode_t * Node)
 {
     return;
 }
-
 
 static PGNodeSpec_t spec =
 {

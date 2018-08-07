@@ -5,9 +5,7 @@
 #include "../JSONParser/JSONParser.h"
 #include "../ProcessingGraph/ProcessingGraph.h"
 
-/* All the important functions are in the following headers */
 JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph);
-
-PGGraph_t * JSONToGraph(JSONBlock_t * JSON);
+PGGraph_t * JSONToPGGraph(JSONBlock_t * JSON);
 
 #endif
