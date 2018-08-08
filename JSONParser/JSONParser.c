@@ -169,13 +169,11 @@ JSONBlock_t * parse_json(JSONBlock_t * Parent, char ** Tokens, int * TokenLength
         offset = 1;
         for (int i = 0; i < num_attributes; ++i)
         {
-            json->value.object_or_array.element_names[i] = json_read_quotes( json->memory_bank, 
-                                                                                Tokens[offset], NULL );
+            JSONObjectSetAttributeName(json, i, json_read_quotes(json->memory_bank, Tokens[offset], NULL));
             ++offset; /* Pass the name */
             ++offset; /* Pass the colon */
             int extra_offset;
-            json->value.object_or_array.elements[i] = parse_json( json, Tokens+offset,
-                                                                    TokenLengths+offset, &extra_offset );
+            JSONObjectSetAttributeByIndex(json, i, parse_json(json, Tokens+offset, TokenLengths+offset, &extra_offset));
             offset += extra_offset; /* Pass the object */
             ++offset; /* To pass the comma */
         }
@@ -201,7 +199,7 @@ JSONBlock_t * parse_json(JSONBlock_t * Parent, char ** Tokens, int * TokenLength
         for (int i = 0; i < num_elements; ++i)
         {
             int extra_offset;
-            json->value.object_or_array.elements[i] = parse_json(json,Tokens+offset,TokenLengths+offset,&extra_offset);
+            JSONArraySetElement(json, i, parse_json(json,Tokens+offset,TokenLengths+offset,&extra_offset));
             offset += extra_offset;
             ++offset; /* To pass the comma */
         }
@@ -340,84 +338,97 @@ void json_print_tabs(int Levels, FILE * Out)
     for (int i = 0; i < Levels; ++i) fprintf(Out, "    ");
 }
 
-void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket)
+int json_is_array_or_object(JSONBlock_t * JSON)
+{
+    JSONObjectType_t type = JSONBlockGetType(JSON);
+    return (type == JSONArray || type == JSONObject);
+}
+
+/* Check is an object or awway should be printed on one line */
+int json_is_one_liner(JSONBlock_t * JSON)
+{
+    int is_one_liner = 1;
+    switch (JSONBlockGetType(JSON))
+    {
+        case JSONArray: {
+            int has_arrays_or_objects = 0;
+            int len = JSONArrayGetLength(JSON);
+            for (int i = 0; i < len; ++i) {
+                if (json_is_array_or_object(JSONArrayGetElement(JSON,i))) {
+                    has_arrays_or_objects = 1;
+                    break;
+                }
+            }
+            if (has_arrays_or_objects) is_one_liner = 0;
+        } break;
+        case JSONObject: {
+            // if ( JSONObjectGetNumAttributes(JSON) > 1 ||
+            //      json_is_array_or_object(JSONObjectGetAttributeByIndex(JSON, 1)))
+            //     is_one_liner = 0;
+            is_one_liner = 0;
+        } break;
+    }
+    return is_one_liner;
+}
+
+void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket, int OneLiner)
 {
     switch (JSONBlockGetType(JSON))
     {
     case JSONObject:
-        if (NewLineBracket && LevelsIn != 0)
+        if (!OneLiner)
         {
-            fprintf(Out, "\n");
-            json_print_tabs(LevelsIn, Out);
-        }
-        fprintf(Out, "{\n");
-        for (int e = 0; e < JSON->value.object_or_array.num_elements; ++e)
-        {
-            json_print_tabs(LevelsIn+1, Out);
-            fprintf(Out, "\"%s\":", JSON->value.object_or_array.element_names[e]);
-            if (!NewLineBracket) fprintf(Out, " ");
-            write_json(JSON->value.object_or_array.elements[e], Out, LevelsIn+1, NewLineBracket);
-            if (e!=JSON->value.object_or_array.num_elements-1) fprintf(Out, ",");
-            fprintf(Out, "\n");
-        }
-        json_print_tabs(LevelsIn, Out);
-        fprintf(Out, "}");
-        break;
-
-    case JSONArray: {
-        /* If there are no arrays or objects within the array, we can put it all on one line  */
-        int print_on_one_line = 0;
-        for (int e = 0; e < JSON->value.object_or_array.num_elements; ++e)
-        {
-            if ( JSONBlockGetType(JSON->value.object_or_array.elements[e]) == JSONObject ||
-                 JSONBlockGetType(JSON->value.object_or_array.elements[e]) == JSONObject )
+            fprintf(Out, "{\n");
+            for (int e = 0; e < JSONObjectGetNumAttributes(JSON); ++e)
             {
-                 print_on_one_line = 1;
-                 break;
-            }
-        }
-        if (NewLineBracket && LevelsIn != 0 && print_on_one_line)
-        {
-            fprintf(Out, "\n");
-            json_print_tabs(LevelsIn, Out);
-        }
-        fprintf(Out, "[");
-        if (((JSONBlockGetType(JSON->value.object_or_array.elements[0]) != JSONObject &&
-              JSONBlockGetType(JSON->value.object_or_array.elements[0]) != JSONArray) ||
-              !NewLineBracket ) && print_on_one_line)
-        {
-            fprintf(Out, "\n");
-        }
-        
-        for (int e = 0; e < JSON->value.object_or_array.num_elements; ++e)
-        {
-            if (print_on_one_line)
+                int is_one_liner = json_is_one_liner(JSONObjectGetAttributeByIndex(JSON, e));
                 json_print_tabs(LevelsIn+1, Out);
-            write_json(JSON->value.object_or_array.elements[e], Out, LevelsIn+1, NewLineBracket);
-            if (e != JSON->value.object_or_array.num_elements-1)
-            {
-                fprintf(Out, ",");
-                if (((JSONBlockGetType(JSON->value.object_or_array.elements[e+1]) != JSONObject &&
-                      JSONBlockGetType(JSON->value.object_or_array.elements[e+1]) != JSONArray) ||
-                      !NewLineBracket ) && print_on_one_line)
+                fprintf(Out, "\"%s\": ", JSONObjectGetAttributeName(JSON, e));
+                /* Go to next line if it is an array */
+                if (!is_one_liner && NewLineBracket)
                 {
                     fprintf(Out, "\n");
+                    json_print_tabs(LevelsIn+1, Out);
                 }
+                write_json(JSONObjectGetAttributeByIndex(JSON, e), Out, LevelsIn+1, NewLineBracket, is_one_liner);
+                if (e != JSONObjectGetNumAttributes(JSON)-1) fprintf(Out, ",");
+                fprintf(Out, "\n");
             }
-            else if (print_on_one_line) fprintf(Out, "\n");
-        }
-        if (print_on_one_line)
             json_print_tabs(LevelsIn, Out);
+            fprintf(Out, "}");
+        }
+        else
+        {
+            fprintf(Out, "{\"%s\": ", JSONObjectGetAttributeName(JSON, 0));
+            write_json(JSONObjectGetAttributeByIndex(JSON, 0), Out, 0, NewLineBracket, OneLiner);
+            fprintf(Out, "}");
+        }
+        break;
+
+    case JSONArray:
+        fprintf(Out, "[");
+        for (int e = 0; e < JSONArrayGetLength(JSON); ++e)
+        {  
+            if (!OneLiner)
+            {
+                fprintf(Out, "\n");
+                json_print_tabs(LevelsIn+1, Out);
+            }
+            write_json(JSONArrayGetElement(JSON, e), Out, LevelsIn+1, NewLineBracket, 0);
+            if (e !=  JSONArrayGetLength(JSON)-1) fprintf(Out, ",");
+            else if (!OneLiner) fprintf(Out, "\n");
+        }
+        if (!OneLiner) json_print_tabs(LevelsIn, Out);
         fprintf(Out, "]");
-    } break;
+        break;
 
     case JSONNumber:
-        fprintf(Out, "%.10lg", JSON->value.numerical_value);
+        fprintf(Out, "%.10lg", JSONNumberGetValue(JSON));
         break;
 
     case JSONString:
         fprintf(Out, "\"");
-        char * t = JSON->value.text;
+        char * t = JSONStringGetTextPointer(JSON);
         while (1)
         {
             char * u = t;
@@ -436,7 +447,7 @@ void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket
         break;
 
     case JSONBoolean:
-        if (JSON->value.boolean)
+        if (JSONBooleanGetValue(JSON))
             fprintf(Out, "true");
         else
             fprintf(Out, "false");
@@ -450,7 +461,7 @@ void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket
 
 void WriteJSON(JSONBlock_t * JSON, int BracketOnNewLine, FILE * Out)
 {
-    write_json(JSON, Out, 0, BracketOnNewLine);
+    write_json(JSON, Out, 0, BracketOnNewLine, 0);
 }
 
 void FreeJSON(JSONBlock_t * JSON)

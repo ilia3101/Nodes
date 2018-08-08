@@ -101,10 +101,7 @@ int main(int argc, char ** argv)
     // PGGraphAddNode(graph, nodes[0]);
     // PGGraphAddNode(graph, nodes[0]);
 
-    /* Exposure node */
-    PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNode(graph, nodes[0]));
-    PGNodeSetValueParameter(exposure_node, 0, 2.9);
-
+    #if 0
     /* RAm input */
     int image_input_node_index = PGGraphAddNode(graph, nodes[2]);
     PGNode_t * image_input_node = PGGraphGetNode(graph, image_input_node_index);
@@ -113,6 +110,16 @@ int main(int argc, char ** argv)
     PGNodeSetTextParameter(image_input_node, 0, pointer_as_text);
     PGNodeSetValueParameter(image_input_node, 1, width);
     PGNodeSetValueParameter(image_input_node, 2, height);
+    #else
+    int image_input_node_index = PGGraphAddNode(graph, nodes[1]);
+    PGNode_t * image_input_node = PGGraphGetNode(graph, image_input_node_index);
+    PGNodeSetFilePathParameter(image_input_node, 0, argv[1]);
+    #endif
+
+    /* Exposure node */
+    PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNode(graph, nodes[0]));
+    PGNodeSetValueParameter(exposure_node, 0, 7);
+
 
     /* Add output node */
     int output_node_index = PGGraphAddNode(graph, nodes[3]);
@@ -125,7 +132,7 @@ int main(int argc, char ** argv)
     PGNodeConnect(exposure_node, 0, image_input_node, 0);
 
 
-    // PGImage_t * graph_output_image = PGGraphGetOutput(graph);
+    // PGImage_t * a_graph_output_image = PGGraphGetOutput(graph);
     // graph_output_image = PGGraphGetOutput(graph);
     
     /**************************************************************************/
@@ -134,6 +141,8 @@ int main(int argc, char ** argv)
 
     /**************************** JSON STUFF TEST *****************************/
     JSONBlock_t * jsongraph = PGGraphToJSON(graph);
+    WriteJSON(jsongraph, 1, stdout);
+    puts("");
     WriteJSON(jsongraph, 0, stdout);
     puts("");
 
@@ -149,12 +158,13 @@ int main(int argc, char ** argv)
     fread(text, szz, 1, jsonfile);
 
     JSONBlock_t * graph_json = ParseJSON(text);
-    WriteJSON(graph_json, 0, jsonfile);
+    // WriteJSON(graph_json, 1, jsonfile);
 
     PGGraph_t * graph_made_from_json = JSONToPGGraph(graph_json);
 
     /* Now run the graph read from JSON */
-     PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
+    PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
+    // graph_output_image = PGGraphGetOutput(graph_made_from_json);
 
     /**************************************************************************/
 

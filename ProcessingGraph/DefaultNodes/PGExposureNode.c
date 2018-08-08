@@ -12,6 +12,7 @@
 /* This node only needs one output function */
 static void output_function(PGNode_t * Node)
 {
+    printf("%s\n", __FILE__);
     PGImage_t * input = PGNodeGetInput(Node, 0)->value.image;
 
     PGNodeOutput_t * output = &Node->outputs[0];
@@ -32,13 +33,17 @@ static void output_function(PGNode_t * Node)
     float * dest = PGImageGetDataPointer(img);
     float * src = PGImageGetDataPointer(input);
 
+    printf("source: %p, %f\n", src, src[3]);
+
     /* Becoz it's stops */
     printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
     float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
 
     size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*3;
     for (size_t i = 0; i < sz; ++i)
-        dest[i] = src[i]*exposure_fac;
+    {
+        dest[i] = src[i] * exposure_fac;
+    }
 }
 
 static void init(PGNode_t * Node)
@@ -84,7 +89,6 @@ static PGNodeSpec_t spec =
 
 PGNodeSpec_t * GetNodeSpec()
 {
-
     spec.OutputFunctions = output_functions;
     printf("%p\n",spec.OutputFunctions[0]);
     /* Set pointer in output function array to the output function */

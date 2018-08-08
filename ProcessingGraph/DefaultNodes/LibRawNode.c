@@ -19,18 +19,41 @@ static void output_function(PGNode_t * Node)
 
     PGImage_t * img = output->value.image;
 
-    int width = PGNodeGetValueParameterValue(Node, 1);
-    int height = PGNodeGetValueParameterValue(Node, 2);
+    /* fkjdshafkjlhsakjflhfdklajsfdhfalkjhlskdjhflkjdsahfalkjdsfhdslkjfhlkjsad */
+
+    libraw_data_t * Raw = libraw_init(0);
+    if (libraw_open_file(Raw, PGNodeGetFilePathParameterValue(Node, 0))) puts("failed to open file");
+    if (libraw_unpack(Raw)) puts("failed to unpack");
+
+    /* This is the bayer image */
+    uint16_t * bayerimage = Raw->rawdata.raw_image;
+    int width = libraw_get_raw_width(Raw);
+    int height = libraw_get_raw_height(Raw);
+
+    float * raw_float = malloc(width*height*3*sizeof(float));
+
+    int shift = 6;
+    for (size_t i = 0; i < width*height*3; i+=3)
+    {
+        raw_float[i] = bayerimage[i/3] / 65536.0;
+        raw_float[i+1] = bayerimage[i/3] / 65536.0;
+        raw_float[i+2] = bayerimage[i/3] / 65536.0;
+    }
+
+    libraw_recycle(Raw);
+    libraw_close(Raw);
+
+    /* sfsdfadsfasdfkjsdlkflkjhsadlkjfhkjsalhfkjasfshdlkhdsfhalkhfksalhadsfsdfas */
     
     /* Make image be right size */
     PGImageSetDimensions(img, width, height);
     printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
-    
+
     float * imagedata = PGImageGetDataPointer(img);
 
-    float * srcdata;
-    sscanf(PGNodeGetTextParameterValue(Node, 0), "%p", &srcdata);
+    float * srcdata = raw_float;
     memcpy(imagedata, srcdata, width*height*sizeof(float)*3);
+    free(raw_float);
 }
 
 
@@ -48,25 +71,9 @@ static void uninit(PGNode_t * Node)
 static PGNodeParameterSpec_t parameters[] =
 {
     {
-        .Name = "Pointer",
-        .Description = "Pointer to RAM location of image",
-        .Type = PGNodeStringParameter
-    },
-    {
-        .Name = "Width",
-        .Description = "How many pixels wide the image is",
-        .Type = PGNodeValueParameter,
-        .Integers = 1,
-        .LimitRange = 0,
-        .DefaultValue = 0
-    },
-    {
-        .Name = "Height",
-        .Description = "How many pixels high the image is",
-        .Type = PGNodeValueParameter,
-        .Integers = 1,
-        .LimitRange = 0,
-        .DefaultValue = 0
+        .Name = "File Path",
+        .Description = "Path to a raw file",
+        .Type = PGNodeFilePathParameter
     }
 };
 
@@ -76,7 +83,7 @@ static PGNodeSpec_t spec =
 {
     .Name = "LibRaw",
     .Description = "Reads a camera raw file using LibRaw",
-    .Category = "Debug",
+    .Category = "Input",
 
     .NumOutputs = 1,
     .OutputTypes = {PGNodeImageOutput},
@@ -84,7 +91,7 @@ static PGNodeSpec_t spec =
     .InputTypes = NULL,
 
     .HasParameters = 1,
-    .NumParameters = 3,
+    .NumParameters = 1,
     .Parameters = parameters,
 
     .OutputFunctions = NULL,
@@ -96,8 +103,5 @@ static PGNodeSpec_t spec =
 PGNodeSpec_t * GetNodeSpec()
 {
     spec.OutputFunctions = output_functions;
-    // ii_spec.Init = ii_init;
-    /* Set pointer in output function array to the output function */
-    // ii_output_functions[0] = &ii_output_function;
     return &spec;
 }

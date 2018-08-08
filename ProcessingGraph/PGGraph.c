@@ -101,7 +101,6 @@ PGImage_t * PGGraphGetOutput(PGGraph_t * Graph)
     return PGNodeGetInput(output_node, 0)->value.image;
 }
 
-
 int PGGraphGetNodeIndex(PGGraph_t * Graph, PGNode_t * Node)
 {
     int num_nodes = PGGraphGetNumNodes(Graph);

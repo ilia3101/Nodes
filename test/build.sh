@@ -28,8 +28,8 @@ function successmessage {
 
 ######################## Variables and flags and stuff #########################
 appname=ProcessingGraphApp
-compiler=gcc
-cppcompiler=g++
+compiler=clang
+cppcompiler=g++-8
 compilerflags="-std=c99 -O3 -Wall"
 #system specific
 if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux

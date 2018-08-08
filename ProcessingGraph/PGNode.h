@@ -32,6 +32,15 @@ PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex);
 PGNodeSpec_t * PGNodeGetSpec(PGNode_t * Node);
 PGNodeOutput_t * PGNodeGetInput(PGNode_t * Node, int InputIndex);
 
+/* Connect/disconnect nodes */
+void PGNodeConnect( PGNode_t * Node,
+                    int NodeInputIndex,
+                    PGNode_t * InputNode,
+                    int InputNodeOutputIndex );
+void PGNodeDisconnect( PGNode_t * Node,
+                       int NodeInputIndex,
+                       PGNode_t * InputNode,
+                       int InputNodeOutputIndex );
 
 /* Parameter setters */
 void PGNodeSetValueParameter(PGNode_t * Node, int ParameterIndex, float Value);

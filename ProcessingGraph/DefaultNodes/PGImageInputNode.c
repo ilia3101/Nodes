@@ -10,6 +10,7 @@
 /* This node only needs one output function */
 static void output_function(PGNode_t * Node)
 {
+    printf("%s\n", __FILE__);
     PGNodeOutput_t * output = &Node->outputs[0];
 
     /* If this is output is unused... */
@@ -21,11 +22,12 @@ static void output_function(PGNode_t * Node)
 
     PGImage_t * img = output->value.image;
 
-    int width = PGNodeGetValueParameterValue(Node, 1);
-    int height = PGNodeGetValueParameterValue(Node, 2);
+    int width = (int)PGNodeGetValueParameterValue(Node, 1);
+    int height = (int)PGNodeGetValueParameterValue(Node, 2);
     
     /* Make image be right size */
     PGImageSetDimensions(img, width, height);
+    puts("hi");
     
     float * imagedata = PGImageGetDataPointer(img);
 
