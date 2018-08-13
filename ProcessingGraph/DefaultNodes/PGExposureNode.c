@@ -12,7 +12,6 @@
 /* This node only needs one output function */
 static void output_function(PGNode_t * Node)
 {
-    printf("%s\n", __FILE__);
     PGImage_t * input = PGNodeGetInput(Node, 0)->value.image;
 
     PGNodeOutput_t * output = &Node->outputs[0];
@@ -30,8 +29,9 @@ static void output_function(PGNode_t * Node)
     PGImageSetDimensions(img, PGImageGetWidth(input), PGImageGetHeight(input));
     printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
     
-    float * dest = PGImageGetDataPointer(img);
-    float * src = PGImageGetDataPointer(input);
+    float * restrict dest = PGImageGetDataPointer(img);
+    float * restrict end = dest + PGImageGetWidth(img)*PGImageGetHeight(img)*4;
+    float * restrict src = PGImageGetDataPointer(input);
 
     printf("source: %p, %f\n", src, src[3]);
 
@@ -39,10 +39,16 @@ static void output_function(PGNode_t * Node)
     printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
     float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
 
-    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*3;
-    for (size_t i = 0; i < sz; ++i)
+    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*4;
+    while (dest < end)
     {
-        dest[i] = src[i] * exposure_fac;
+        dest[0] = src[0] * exposure_fac;
+        dest[1] = src[1] * exposure_fac;
+        dest[2] = src[2] * exposure_fac;
+        dest[3] = src[4];
+
+        dest += 4;
+        src += 4;
     }
 }
 

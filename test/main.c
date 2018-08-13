@@ -77,7 +77,6 @@ int main(int argc, char ** argv)
 
 
 
-
     /************************** ProcessingGraph Test **************************/
 
     void * test = new_PGImage(1,1);
@@ -118,7 +117,7 @@ int main(int argc, char ** argv)
 
     /* Exposure node */
     PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNode(graph, nodes[0]));
-    PGNodeSetValueParameter(exposure_node, 0, 7);
+    PGNodeSetValueParameter(exposure_node, 0, 4.6);
 
 
     /* Add output node */
@@ -176,11 +175,15 @@ int main(int argc, char ** argv)
     height = PGImageGetHeight(graph_output_image);
     uint8_t * bmpimg_2 = malloc(width*height*3);
     float * floatydata = PGImageGetDataPointer(graph_output_image);
-    for (int i = 0; i < width*height*3; ++i)
+    for (int i = 0; i < width*height; ++i)
     {
-        float val = floatydata[i]*255.0;
-        if (val > 255) val = 255;
-        bmpimg_2[i] = val;
+        for (int j = 0; j < 3; ++j)
+        {
+            float val = floatydata[i*4+j]*255.0;
+            if (val > 255) val = 255;
+
+            bmpimg_2[i*3+j] = val;
+        }
     }
     writebmp(bmpimg_2, width, height, "pic_graph.bmp");
 

@@ -28,9 +28,9 @@ function successmessage {
 
 ######################## Variables and flags and stuff #########################
 appname=ProcessingGraphApp
-compiler=clang
-cppcompiler=g++-8
-compilerflags="-std=c99 -O3 -Wall"
+compiler=gcc
+cppcompiler=g++
+compilerflags="-Wall -std=c99 -O3 -Ofast -m64 -DNDEBUG"
 #system specific
 if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux
 	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -ldl -rdynamic"

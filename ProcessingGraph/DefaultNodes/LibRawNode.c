@@ -20,40 +20,53 @@ static void output_function(PGNode_t * Node)
     PGImage_t * img = output->value.image;
 
     /* fkjdshafkjlhsakjflhfdklajsfdhfalkjhlskdjhflkjdsahfalkjdsfhdslkjfhlkjsad */
+    clock_t begin = clock();
 
     libraw_data_t * Raw = libraw_init(0);
     if (libraw_open_file(Raw, PGNodeGetFilePathParameterValue(Node, 0))) puts("failed to open file");
     if (libraw_unpack(Raw)) puts("failed to unpack");
 
-    /* This is the bayer image */
+    /* This is the bayer data */
     uint16_t * bayerimage = Raw->rawdata.raw_image;
     int width = libraw_get_raw_width(Raw);
     int height = libraw_get_raw_height(Raw);
 
-    float * raw_float = malloc(width*height*3*sizeof(float));
+    /* Subtract black or whatever */
+    libraw_subtract_black(Raw);
 
-    int shift = 6;
-    for (size_t i = 0; i < width*height*3; i+=3)
+    /* Make image be right size */
+    PGImageSetDimensions(img, width, height);
+    printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
+    float * raw_float = PGImageGetDataPointer(img);
+
+
+    /* Look up table int 0-65535 -> float 0.0-1.0 */
+    float lookup[65536];
+    for (int i = 0; i < 65536; ++i) lookup[i] = ((float)i) / 65535.0;
+
+    /* transter to float */
+    uint16_t * restrict bayerpix = bayerimage;
+    float * restrict pix = raw_float;
+    float * restrict pixend = raw_float + width*height*4;
+
+    while (pix < pixend)
     {
-        raw_float[i] = bayerimage[i/3] / 65536.0;
-        raw_float[i+1] = bayerimage[i/3] / 65536.0;
-        raw_float[i+2] = bayerimage[i/3] / 65536.0;
+        float value = lookup[*bayerpix];
+        pix[0] = value;
+        pix[1] = value;
+        pix[2] = value;
+        pix[3] = 1.0;
+        pix += 4;
+        ++bayerpix;
     }
 
     libraw_recycle(Raw);
     libraw_close(Raw);
 
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC * 1000.0;
+    printf("time spent reading raw file: %f\n", time_spent);
     /* sfsdfadsfasdfkjsdlkflkjhsadlkjfhkjsalhfkjasfshdlkhdsfhalkhfksalhadsfsdfas */
-    
-    /* Make image be right size */
-    PGImageSetDimensions(img, width, height);
-    printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
-
-    float * imagedata = PGImageGetDataPointer(img);
-
-    float * srcdata = raw_float;
-    memcpy(imagedata, srcdata, width*height*sizeof(float)*3);
-    free(raw_float);
 }
 
 
@@ -85,8 +98,8 @@ static PGNodeSpec_t spec =
     .Description = "Reads a camera raw file using LibRaw",
     .Category = "Input",
 
-    .NumOutputs = 1,
-    .OutputTypes = {PGNodeImageOutput},
+    .NumOutputs = 3,
+    .OutputTypes = {PGNodeImageOutput, PGNodeValueOutput, PGNodeValueOutput},
     .NumInputs = 0,
     .InputTypes = NULL,
 
