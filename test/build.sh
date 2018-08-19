@@ -1,4 +1,4 @@
-# Rule: static linking as much as possible (or hell)
+# Rule: static linking as much as possible
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then buildstart=$(date +%s.%N); fi
 
@@ -120,42 +120,6 @@ successmessage "created buildoutput folder"
 echo " "
 
 
-
-# ############################# Find all source files ############################
-# cd ../
-# if [[ "$OSTYPE" == "linux-gnu" ]]; then
-# 	src=$(find -name '*.c')
-# elif [[ "$OSTYPE" == "darwin"* ]]; then
-# 	src=$(find . -name "*.c")
-# else
-# 	death "Unknown OS"
-# fi
-# cd - > /dev/null
-
-
-# ########################### Compile all source files ###########################
-# echo "Compiling source files..."
-# touch .output
-# for file in $src
-# do
-# 	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
-# 	$compiler -c $flags ../$file &> .output
-# 	if [ $? -eq 0 ]; then
-# 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
-# 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
-# 			successmessage "compiled $file in $ftime ms"
-# 		else
-# 			successmessage "compiled $file"
-# 		fi
-# 	else
-# 		death "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
-# 	fi
-# done
-# rm .output
-# echo " "
-
-
-
 ############################ Build all the libraries ###########################
 libraries=(ProcessingGraph MemoryBank JSONParser GraphJSON)
 echo "Building libraries ..."
@@ -164,6 +128,7 @@ do
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
 	cd ../$library > /dev/null
 	touch .output
+	# Each library has its own build script whcih outputs to a buildoutput folder
 	./build.sh $compiler $compilerflags &> .output
 	if [ $? -eq 0 ]; then
 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -187,7 +152,7 @@ echo " "
 
 
 ######## Now compile C files that just need to be compiled on their own ########
-echo "Compiling any separate C files ..."
+echo "Compiling C files ..."
 # without .c extension
 cfiles=(main bitmap)
 touch .output
