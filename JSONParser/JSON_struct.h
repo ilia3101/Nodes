@@ -1,8 +1,6 @@
 #ifndef _JSON_struct_h_
 #define _JSON_struct_h_
 
-typedef int JSONObjectType_t;
-
 typedef struct JSONBlock {
     MemoryBank_t * memory_bank;
     JSONObjectType_t type;

@@ -100,6 +100,8 @@ int main(int argc, char ** argv)
     // PGGraphAddNode(graph, nodes[0]);
     // PGGraphAddNode(graph, nodes[0]);
 
+    PGGraphAddFile(graph, argv[1]);
+
     #if 0
     /* RAm input */
     int image_input_node_index = PGGraphAddNode(graph, nodes[2]);
@@ -110,9 +112,9 @@ int main(int argc, char ** argv)
     PGNodeSetValueParameter(image_input_node, 1, width);
     PGNodeSetValueParameter(image_input_node, 2, height);
     #else
-    int image_input_node_index = PGGraphAddNode(graph, nodes[1]);
-    PGNode_t * image_input_node = PGGraphGetNode(graph, image_input_node_index);
-    PGNodeSetFilePathParameter(image_input_node, 0, argv[1]);
+    int LibRaw_node_index = PGGraphAddNode(graph, nodes[3]);
+    PGNode_t * LibRaw_node = PGGraphGetNode(graph, LibRaw_node_index);
+    PGNodeSetFilePathParameter(LibRaw_node, 0, argv[1]);
     #endif
 
     /* Exposure node */
@@ -121,14 +123,15 @@ int main(int argc, char ** argv)
 
 
     /* Add output node */
-    int output_node_index = PGGraphAddNode(graph, nodes[3]);
+    int output_node_index = PGGraphAddNode(graph, nodes[2]);
+    printf("output node index: %i\n", output_node_index);
     PGNode_t * output_node = PGGraphGetNode(graph, output_node_index);
     // PGGraphGetNode(graph, output_node_index);
 
     /* Output node input #0 to exposure node output #0 */
     PGNodeConnect(output_node, 0, exposure_node, 0);
-    /* exposure node input #0 to RAMinput node output #0 */
-    PGNodeConnect(exposure_node, 0, image_input_node, 0);
+    /* exposure node input #0 to LibRaw node output #0 */
+    PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
 
 
     // PGImage_t * a_graph_output_image = PGGraphGetOutput(graph);

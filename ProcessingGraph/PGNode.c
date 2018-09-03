@@ -24,6 +24,10 @@ PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph)
     node->graph = Graph;
     node->spec = Spec;
     node->input_nodes = MBZeroAlloc(mb, Spec->NumInputs * sizeof(PGNode_t *));
+    for (int i = 0; i < Spec->NumInputs; ++i) node->input_nodes[i] == NULL;
+    if (Spec->NumInputs)
+        if (node->input_nodes[0] != NULL) printf("%s NOT NULL, has %i inputs\n", Spec->Name, Spec->NumInputs);
+    // if (node->input_nodes == NULL) puts("malloc failes");
     node->input_node_output_indexes=MBZeroAlloc(mb,Spec->NumInputs*sizeof(int));
     node->output_nodes = MBMalloc(mb, Spec->NumOutputs * sizeof(PGNode_t **));
     for (int i = 0; i < Spec->NumOutputs; ++i)
@@ -71,10 +75,13 @@ void PGNodeConnect( PGNode_t * Node,
 {
     /* First, disconnect if connected */
     if (Node->input_nodes[NodeInputIndex] != NULL)
+    {
+        printf("%s input %i not NULL: %p, disconnecting\n", PGNodeGetSpec(Node)->Name, NodeInputIndex, Node->input_nodes[NodeInputIndex]);
         PGNodeDisconnect( Node,
                           NodeInputIndex,
                           Node->input_nodes[NodeInputIndex],
                           Node->input_node_output_indexes[NodeInputIndex] );
+    }
 
     /* Set node input pointer */
     Node->input_nodes[NodeInputIndex] = InputNode;

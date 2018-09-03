@@ -3,16 +3,19 @@
 
 #include <stdio.h>
 #include "../MemoryBank/MemoryBank.h"
-#include "JSON_struct.h"
 
 
-/* JSONObjectType_t possible values: */
+/* JSONObjectType_t and possible values */
+typedef int JSONObjectType_t;
 #define JSONObject 0
 #define JSONArray 1
 #define JSONNumber 2
 #define JSONString 3
 #define JSONBoolean 4
 #define JSONNull 5
+
+
+#include "JSON_struct.h"
 
 
 /* Constructors. For JSONObject and JSONArray Parent may be NULL. */

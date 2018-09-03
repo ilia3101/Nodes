@@ -1,26 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 #include <ctype.h>
 #include <alloca.h>
+// #include <stdint.h>
 
 #include "JSONParser.h"
 
 /* FNV-1a Hash function
  * https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function */
-static uint64_t hash(uint8_t * data, size_t len)
-{
-    uint64_t hash = 0xcbf29ce484222325;
-    uint8_t * end = data + len;
-    while (data < end)
-    {
-        hash = hash ^ *data;
-        hash = hash * 0x100000001b3;
-        ++data;
-    }
-    return hash;
-}
+// static uint64_t hash(uint8_t * data, size_t len)
+// {
+//     uint64_t hash = 0xcbf29ce484222325;
+//     uint8_t * end = data + len;
+//     while (data < end)
+//     {
+//         hash = hash ^ *data;
+//         hash = hash * 0x100000001b3;
+//         ++data;
+//     }
+//     return hash;
+// }
 
 int is_start_of_json_token(char c)
 {

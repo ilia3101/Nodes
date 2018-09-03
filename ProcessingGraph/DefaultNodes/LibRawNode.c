@@ -84,8 +84,8 @@ static void uninit(PGNode_t * Node)
 static PGNodeParameterSpec_t parameters[] =
 {
     {
-        .Name = "File Path",
-        .Description = "Path to a raw file",
+        .Name = "Raw File",
+        .Description = "A raw file to read",
         .Type = PGNodeFilePathParameter
     }
 };

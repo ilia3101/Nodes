@@ -23,4 +23,18 @@ PGNode_t * PGGraphGetNode(PGGraph_t * Graph, int Index);
 /* Get index of node in graph. Nope should be part of that graph */
 int PGGraphGetNodeIndex(PGGraph_t * Graph, PGNode_t * Node);
 
+
+
+/******************************* File managment *******************************/
+void PGGraphAddFileWithID(PGGraph_t * Graph, char * Path, int FileID);
+/* Return value is file's ID */
+int PGGraphAddFile(PGGraph_t * Graph, char * Path);
+char * PGGraphGetFilePath(PGGraph_t * Graph, int FileID);
+char * PGGraphGetFilePathByIndex(PGGraph_t * Graph, int Index);
+int PGGraphGetNumFiles(PGGraph_t * Graph);
+int PGGraphGetFileID(PGGraph_t * Graph, int Index);
+void PGGraphSetFileID(PGGraph_t * Graph, int Index, int FileID);
+int PGGraphGetFileIndex(PGGraph_t * Graph, int FileID);
+void PGGraphSetCurrentFileID(PGGraph_t * Graph, int CurrentFileID);
+
 #endif

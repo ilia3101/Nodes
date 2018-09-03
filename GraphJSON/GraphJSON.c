@@ -1,14 +1,34 @@
 #include <stdio.h>
 #include "GraphJSON.h"
 
-JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph)
+JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph, char * JSONFilePath)
 {
-    int num_nodes = PGGraphGetNumNodes(Graph);
-
     JSONBlock_t * graph = new_EmptyJSONObject(NULL, 0);
 
+    /********************************* FILES **********************************/
+
+    int num_files = PGGraphGetNumFiles(Graph);
+    JSONBlock_t * files = new_EmptyJSONArray(graph, num_files);
+
+    printf("%i files\n", num_files);
+    for (int f = 0; f < num_files; ++f)
+    {
+        JSONBlock_t * file = new_EmptyJSONObject(files, 2);
+        JSONObjectSetAttributeName(file, 0, "path_absolute");
+        JSONObjectSetAttributeByIndex(file, 0, new_JSONString(file, PGGraphGetFilePathByIndex(Graph, f)));
+        /* Path relative to JSONFilePath */
+        JSONObjectSetAttributeName(file, 1, "path_relative");
+        JSONObjectSetAttributeByIndex(file, 1, new_JSONString(file, PGGraphGetFilePathByIndex(Graph, f)));
+        JSONArraySetElement(files, f, file);
+    }
+
+    JSONObjectAppendAttribute(graph, files, "files");
+
+    /********************************* NODES **********************************/
+
+    int num_nodes = PGGraphGetNumNodes(Graph);
     JSONBlock_t * nodes = new_EmptyJSONArray(graph, num_nodes);
-    
+
     for (int i = 0; i < num_nodes; ++i)
     {
         PGNode_t * node = PGGraphGetNode(Graph, i);
@@ -83,7 +103,7 @@ JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph)
     return graph;
 }
 
-PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON)
+PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
 {
     JSONBlock_t * nodes = JSONObjectGetAttributeByName(GraphJSON, "nodes");
     int num_nodes = JSONArrayGetLength(nodes);
