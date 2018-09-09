@@ -114,7 +114,7 @@ int main(int argc, char ** argv)
     #else
     int LibRaw_node_index = PGGraphAddNode(graph, nodes[3]);
     PGNode_t * LibRaw_node = PGGraphGetNode(graph, LibRaw_node_index);
-    PGNodeSetFilePathParameter(LibRaw_node, 0, argv[1]);
+    PGNodeSetFileParameter(LibRaw_node, 0, 0);
     #endif
 
     /* Exposure node */
@@ -142,7 +142,7 @@ int main(int argc, char ** argv)
 
 
     /**************************** JSON STUFF TEST *****************************/
-    JSONBlock_t * jsongraph = PGGraphToJSON(graph);
+    JSONBlock_t * jsongraph = PGGraphToJSON(graph, "./");
     WriteJSON(jsongraph, 1, stdout);
     puts("");
     WriteJSON(jsongraph, 0, stdout);
@@ -162,7 +162,7 @@ int main(int argc, char ** argv)
     JSONBlock_t * graph_json = ParseJSON(text);
     // WriteJSON(graph_json, 1, jsonfile);
 
-    PGGraph_t * graph_made_from_json = JSONToPGGraph(graph_json);
+    PGGraph_t * graph_made_from_json = JSONToPGGraph(graph_json, "./");
 
     /* Now run the graph read from JSON */
     PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
@@ -190,6 +190,13 @@ int main(int argc, char ** argv)
     }
     writebmp(bmpimg_2, width, height, "pic_graph.bmp");
 
+
+    free(bmpimg_2);
+    delete_PGImage(test);
+    delete_PGGraph(graph);
+    delete_PGGraph(graph_made_from_json);
+
+    sleep(100);
 
     return 0;
 }

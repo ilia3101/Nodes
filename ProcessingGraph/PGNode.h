@@ -32,6 +32,9 @@ PGNode_t * PGNodeGetOutputNode(PGNode_t * Node, int OutputIndex, int NodeIndex);
 PGNodeSpec_t * PGNodeGetSpec(PGNode_t * Node);
 PGNodeOutput_t * PGNodeGetInput(PGNode_t * Node, int InputIndex);
 
+/* So node knows the graph that owns it. NECESSARY (for files) */
+void PGNodeSetGraph(PGNode_t * Node, PGGraph_t * Graph);
+
 /* Connect/disconnect nodes */
 void PGNodeConnect( PGNode_t * Node,
                     int NodeInputIndex,
@@ -42,18 +45,21 @@ void PGNodeDisconnect( PGNode_t * Node,
                        PGNode_t * InputNode,
                        int InputNodeOutputIndex );
 
+/********************************* PARAMETERS *********************************/
+
 /* Parameter setters */
 void PGNodeSetValueParameter(PGNode_t * Node, int ParameterIndex, float Value);
 void PGNodeSetOptionParameter(PGNode_t * Node, int ParameterIndex, int Option);
 void PGNodeSetBooleanParameter(PGNode_t * Node, int ParameterIndex, int Value);
 void PGNodeSetTextParameter(PGNode_t * Node, int ParameterIndex, char * Text);
-void PGNodeSetFilePathParameter(PGNode_t* Node, int ParameterIndex, char* Path);
+void PGNodeSetFileParameter(PGNode_t* Node, int ParameterIndex, int FileID);
 /* Parameter getters */
 float PGNodeGetValueParameterValue(PGNode_t * Node, int ParameterIndex);
 int PGNodeGetOptionParameterValue(PGNode_t * Node, int ParameterIndex);
 int PGNodeGetBooleanParameterValue(PGNode_t * Node, int ParameterIndex);
 char * PGNodeGetTextParameterValue(PGNode_t * Node, int ParameterIndex);
-char * PGNodeGetFilePathParameterValue(PGNode_t * Node, int ParameterIndex);
+int PGNodeGetFileParameterValue(PGNode_t * Node, int ParameterIndex);
+char * PGNodeGetFileParameterPath(PGNode_t * Node, int ParameterIndex);
 
 
 #endif

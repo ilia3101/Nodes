@@ -13,12 +13,14 @@ JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph, char * JSONFilePath)
     printf("%i files\n", num_files);
     for (int f = 0; f < num_files; ++f)
     {
-        JSONBlock_t * file = new_EmptyJSONObject(files, 2);
+        JSONBlock_t * file = new_EmptyJSONObject(files, 1);
         JSONObjectSetAttributeName(file, 0, "path_absolute");
         JSONObjectSetAttributeByIndex(file, 0, new_JSONString(file, PGGraphGetFilePathByIndex(Graph, f)));
-        /* Path relative to JSONFilePath */
-        JSONObjectSetAttributeName(file, 1, "path_relative");
-        JSONObjectSetAttributeByIndex(file, 1, new_JSONString(file, PGGraphGetFilePathByIndex(Graph, f)));
+        if (JSONFilePath != NULL)
+        {
+            char * relative_path = PGGraphGetFilePathByIndex(Graph, f);
+            JSONObjectAppendAttribute(file, new_JSONString(file, relative_path), "path_relative");
+        }
         JSONArraySetElement(files, f, file);
     }
 
@@ -66,25 +68,24 @@ JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph, char * JSONFilePath)
             for (int p = 0; p < num_parameters; ++p)
             {
                 PGNodeParameterSpec_t * paramspec = &spec->Parameters[p];
-                PGNodeParameterState_t * param = &node->parameter_states[p];
                 JSONBlock_t * value;
                 
                 switch (paramspec->Type)
                 {
                 case PGNodeValueParameter:
-                    value = new_JSONNumber(json_node, param->value);
+                    value = new_JSONNumber(json_node, PGNodeGetValueParameterValue(node, p));
                     break;
                 case PGNodeOptionsParameter:
-                    value = new_JSONNumber(json_node, param->option);
+                    value = new_JSONNumber(json_node, PGNodeGetOptionParameterValue(node, p));
                     break;
                 case PGNodeBooleanParameter:
-                    value = new_JSONBoolean(json_node, param->boolean);
+                    value = new_JSONBoolean(json_node, PGNodeGetBooleanParameterValue(node, p));
                     break;
                 case PGNodeStringParameter:
-                    value = new_JSONString(json_node, param->text);
+                    value = new_JSONString(json_node, PGNodeGetTextParameterValue(node, p));
                     break;
-                case PGNodeFilePathParameter:
-                    value = new_JSONString(json_node, param->filepath);
+                case PGNodeFileParameter:
+                    value = new_JSONNumber(json_node, PGNodeGetFileParameterValue(node, p));
                     break;
                 }
 
@@ -105,10 +106,21 @@ JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph, char * JSONFilePath)
 
 PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
 {
+    PGGraph_t * graph = new_PGGraph();
+
+    JSONBlock_t * files = JSONObjectGetAttributeByName(GraphJSON, "files");
+    int num_files = JSONArrayGetLength(files);
+
+    for (int f = 0; f < num_files; ++f)
+    {
+        /* TODO: add handling of relative and absolute path */
+        JSONBlock_t * file = JSONArrayGetElement(files, f);
+        JSONBlock_t * path = JSONObjectGetAttributeByName(file, "path_absolute");
+        PGGraphAddFile(graph, JSONStringGetTextPointer(path));
+    }
+
     JSONBlock_t * nodes = JSONObjectGetAttributeByName(GraphJSON, "nodes");
     int num_nodes = JSONArrayGetLength(nodes);
-
-    PGGraph_t * graph = new_PGGraph();
 
     /* Add every node */
     for (int n = 0; n < num_nodes; ++n)
@@ -164,8 +176,8 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
                     case PGNodeStringParameter:
                         PGNodeSetTextParameter(node, parameter_index, JSONStringGetTextPointer(parameter));
                         break;
-                    case PGNodeFilePathParameter:
-                        PGNodeSetFilePathParameter(node, parameter_index, JSONStringGetTextPointer(parameter));
+                    case PGNodeFileParameter:
+                        PGNodeSetFileParameter(node, parameter_index, (int)JSONNumberGetValue(parameter));
                         break;
                     }
                 }

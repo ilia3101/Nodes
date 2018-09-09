@@ -30,7 +30,7 @@ function successmessage {
 appname=ProcessingGraphApp
 compiler=gcc
 cppcompiler=g++
-compilerflags="-Wall -std=c99 -O3 -Ofast -m64 -DNDEBUG"
+compilerflags="-Wall -Wextra -std=c99 -O3 -Ofast -m64 -DNDEBUG"
 #system specific
 if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux
 	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -ldl -rdynamic"

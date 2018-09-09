@@ -36,12 +36,20 @@ PGGraph_t * new_PGGraph()
     return graph;
 }
 
+/* TODO finish */
+void delete_PGGraph(PGGraph_t * Graph)
+{
+    delete_MemoryBank(Graph->memory_bank);
+}
+
 int PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * Type)
 {
     Graph->nodes = MBRealloc( Graph->memory_bank, Graph->nodes,
                               sizeof(PGNode_t *) * (Graph->num_nodes+1) );
 
-    Graph->nodes[Graph->num_nodes] = new_PGNode(Type, Graph);
+    PGNode_t * node = new_PGNode(Type, Graph);
+    PGNodeSetGraph(node, Graph);
+    Graph->nodes[Graph->num_nodes] = node;
 
     return Graph->num_nodes++;
 }
@@ -123,13 +131,13 @@ int PGGraphGetNodeIndex(PGGraph_t * Graph, PGNode_t * Node)
 
 char * PGGraphGetFilePath(PGGraph_t * Graph, int FileID)
 {
-    pg_file_t * file = NULL;
+    char * path = NULL;
 
     for (int i = 0; i < Graph->num_files; ++i)
-        if (Graph->files[i].id == FileID) file = &Graph->files[i];
+        if (Graph->files[i].id == FileID) path = Graph->files[i].path;
 
-    if (file == NULL) return NULL;
-    else return file->path;
+    puts (path);
+    return path;
 }
 
 char * PGGraphGetFilePathByIndex(PGGraph_t * Graph, int Index)
@@ -149,10 +157,10 @@ void PGGraphAddFileWithID(PGGraph_t * Graph, char * Path, int FileID)
 
     pg_file_t * file = &Graph->files[Graph->num_files-1];
 
+    file->id = FileID;
+
     file->path = MBMalloc(Graph->memory_bank, strlen(Path)+1);
     strcpy(file->path, Path);
-
-    file->id = FileID;
 }
 
 int PGGraphAddFile(PGGraph_t * Graph, char * Path)

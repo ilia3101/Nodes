@@ -18,7 +18,7 @@ typedef union {
     int option; /* Options */
     int boolean; /* Toggle (0=off,1=on) */
     char * text; /* Memory owned by object */
-    char * filepath; /* Same as previous */
+    int file_id; /* ID of the file in the graph */
 } PGNodeParameterState_t;
 
 /* What a node returns as output */
@@ -83,7 +83,7 @@ typedef int PGNodeParamaterType_t;
 #define PGNodeOptionsParameter 1
 #define PGNodeBooleanParameter 2
 #define PGNodeStringParameter 3
-#define PGNodeFilePathParameter 4
+#define PGNodeFileParameter 4
 
 typedef struct
 {

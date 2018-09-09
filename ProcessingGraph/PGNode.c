@@ -11,6 +11,7 @@
 #include "../MemoryBank/MemoryBank.h"
 
 #include "PGNode.h"
+#include "PGGraph.h"
 #include "types/PGTypes.h"
 
 
@@ -66,6 +67,11 @@ void PGNodeFlagChanged(PGNode_t * Node)
             PGNodeFlagChanged(PGNodeGetOutputNode(Node,i,j));
         }
     }
+}
+
+void PGNodeSetGraph(PGNode_t * Node, PGGraph_t * Graph)
+{
+    Node->graph = Graph;
 }
 
 void PGNodeConnect( PGNode_t * Node,
@@ -183,12 +189,10 @@ void PGNodeSetTextParameter(PGNode_t * Node, int ParameterIndex, char * Text)
     strcpy(param->text, Text);
 }
 
-void PGNodeSetFilePathParameter(PGNode_t * Node, int ParameterIndex, char* Path)
+void PGNodeSetFileParameter(PGNode_t * Node, int ParameterIndex, int FileID)
 {
     PGNodeParameterState_t * param = &Node->parameter_states[ParameterIndex];
-    if (param->filepath) MBFree(Node->memory_bank, param->filepath);
-    param->filepath = MBMalloc(Node->memory_bank, strlen(Path)*sizeof(char)+1);
-    strcpy(param->filepath, Path);
+    param->file_id = FileID;
 }
 
 float PGNodeGetValueParameterValue(PGNode_t * Node, int ParameterIndex)
@@ -210,7 +214,15 @@ char * PGNodeGetTextParameterValue(PGNode_t * Node, int ParameterIndex)
 {
     return Node->parameter_states[ParameterIndex].text;
 }
-char * PGNodeGetFilePathParameterValue(PGNode_t * Node, int ParameterIndex)
+
+int PGNodeGetFileParameterValue(PGNode_t * Node, int ParameterIndex)
 {
-    return Node->parameter_states[ParameterIndex].filepath;
+    return Node->parameter_states[ParameterIndex].file_id;
+}
+
+char * PGNodeGetFileParameterPath(PGNode_t * Node, int ParameterIndex)
+{
+    int file_id = Node->parameter_states[ParameterIndex].file_id;
+    char * path = PGGraphGetFilePath(Node->graph, file_id);
+    return path;
 }

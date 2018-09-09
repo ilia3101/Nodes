@@ -23,7 +23,8 @@ static void output_function(PGNode_t * Node)
     clock_t begin = clock();
 
     libraw_data_t * Raw = libraw_init(0);
-    if (libraw_open_file(Raw, PGNodeGetFilePathParameterValue(Node, 0))) puts("failed to open file");
+    puts(PGNodeGetFileParameterPath(Node, 0));
+    if (libraw_open_file(Raw, PGNodeGetFileParameterPath(Node, 0))) puts("failed to open file");
     if (libraw_unpack(Raw)) puts("failed to unpack");
 
     /* This is the bayer data */
@@ -32,7 +33,7 @@ static void output_function(PGNode_t * Node)
     int height = libraw_get_raw_height(Raw);
 
     /* Subtract black or whatever */
-    libraw_subtract_black(Raw);
+    // libraw_subtract_black(Raw);
 
     /* Make image be right size */
     PGImageSetDimensions(img, width, height);
@@ -86,7 +87,7 @@ static PGNodeParameterSpec_t parameters[] =
     {
         .Name = "Raw File",
         .Description = "A raw file to read",
-        .Type = PGNodeFilePathParameter
+        .Type = PGNodeFileParameter
     }
 };
 

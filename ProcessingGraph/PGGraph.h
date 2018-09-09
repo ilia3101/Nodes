@@ -4,8 +4,9 @@
 #include "types/PGGraph_types.h"
 #include "types/PGTypes.h"
 
-/* New graph, needs node directory to function */
+/* Constructor/destructor */
 PGGraph_t * new_PGGraph();
+void delete_PGGraph(PGGraph_t * Graph);
 
 /* Gets the output of graph */
 PGImage_t * PGGraphGetOutput(PGGraph_t * Graph);
