@@ -8,7 +8,6 @@
 /* This must be included */
 #include "../ProcessingGraph.h"
 
-
 /* This node only needs one output function */
 static void output_function(PGNode_t * Node)
 {
@@ -27,11 +26,9 @@ static void output_function(PGNode_t * Node)
     
     /* Make image be right size */
     PGImageSetDimensions(img, PGImageGetWidth(input), PGImageGetHeight(input));
-    printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
     
-    float * restrict dest = PGImageGetDataPointer(img);
-    float * restrict end = dest + PGImageGetWidth(img)*PGImageGetHeight(img)*4;
-    float * restrict src = PGImageGetDataPointer(input);
+    float * dest = PGImageGetDataPointer(img);
+    float * src = PGImageGetDataPointer(input);
 
     printf("source: %p, %f\n", src, src[3]);
 
@@ -39,16 +36,10 @@ static void output_function(PGNode_t * Node)
     printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
     float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
 
-    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*4;
-    while (dest < end)
+    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*3;
+    for (size_t i = 0; i < sz; ++i)
     {
-        dest[0] = src[0] * exposure_fac;
-        dest[1] = src[1] * exposure_fac;
-        dest[2] = src[2] * exposure_fac;
-        dest[3] = src[3];
-
-        dest += 4;
-        src += 4;
+        dest[i] = src[i] * exposure_fac;
     }
 }
 
@@ -66,14 +57,14 @@ static void (* output_functions[])(PGNode_t *) = {&output_function};
 
 static PGNodeSpec_t spec =
 {
-    .Name = "Exposure",
-    .Description = "Adjust exposure of an image",
+    .Name = "Demosaic",
+    .Description = "Convert black and white raw data to colour.",
     .Category = "Basics",
 
     .NumOutputs = 1,
     .OutputTypes = {PGNodeImageOutput},
-    .NumInputs = 1,
-    .InputTypes = {PGNodeImageOutput},
+    .NumInputs = 3,
+    .InputTypes = {PGNodeArrayOutput, PGNodeValueOutput, PGNodeValueOutput},
 
     .HasParameters = 1,
     .NumParameters = 1,

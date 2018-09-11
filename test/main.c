@@ -112,24 +112,32 @@ int main(int argc, char ** argv)
     PGNodeSetValueParameter(image_input_node, 1, width);
     PGNodeSetValueParameter(image_input_node, 2, height);
     #else
-    int LibRaw_node_index = PGGraphAddNode(graph, nodes[3]);
+    int LibRaw_node_index = PGGraphAddNodeByTypeName(graph, "LibRaw");
     PGNode_t * LibRaw_node = PGGraphGetNode(graph, LibRaw_node_index);
     PGNodeSetFileParameter(LibRaw_node, 0, 0);
     #endif
 
     /* Exposure node */
-    PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNode(graph, nodes[0]));
-    PGNodeSetValueParameter(exposure_node, 0, 4.6);
+    PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
+    PGNodeSetValueParameter(exposure_node, 0, 7);
+
+
+
+    /* Exposure node */
+    PGNode_t * tonemap_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Tonemap"));
+    PGNodeSetValueParameter(exposure_node, 0, 7);
 
 
     /* Add output node */
-    int output_node_index = PGGraphAddNode(graph, nodes[2]);
+    int output_node_index = PGGraphAddNodeByTypeName(graph, "Output");
     printf("output node index: %i\n", output_node_index);
     PGNode_t * output_node = PGGraphGetNode(graph, output_node_index);
     // PGGraphGetNode(graph, output_node_index);
 
-    /* Output node input #0 to exposure node output #0 */
-    PGNodeConnect(output_node, 0, exposure_node, 0);
+    /* Output node input #0 to tonemap node output #0 */
+    PGNodeConnect(output_node, 0, tonemap_node, 0);
+    /* Tonemap node input #0 to exposure node output #0 */
+    PGNodeConnect(tonemap_node, 0, exposure_node, 0);
     /* exposure node input #0 to LibRaw node output #0 */
     PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
 

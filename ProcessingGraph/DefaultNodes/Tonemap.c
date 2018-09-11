@@ -27,7 +27,6 @@ static void output_function(PGNode_t * Node)
     
     /* Make image be right size */
     PGImageSetDimensions(img, PGImageGetWidth(input), PGImageGetHeight(input));
-    printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
     
     float * restrict dest = PGImageGetDataPointer(img);
     float * restrict end = dest + PGImageGetWidth(img)*PGImageGetHeight(img)*4;
@@ -35,16 +34,12 @@ static void output_function(PGNode_t * Node)
 
     printf("source: %p, %f\n", src, src[3]);
 
-    /* Becoz it's stops */
-    printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
-    float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
-
     size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*4;
     while (dest < end)
     {
-        dest[0] = src[0] * exposure_fac;
-        dest[1] = src[1] * exposure_fac;
-        dest[2] = src[2] * exposure_fac;
+        dest[0] = src[0] / (1.0f + src[0]);
+        dest[1] = src[1] / (1.0f + src[1]);
+        dest[2] = src[2] / (1.0f + src[2]);
         dest[3] = src[3];
 
         dest += 4;
@@ -66,8 +61,8 @@ static void (* output_functions[])(PGNode_t *) = {&output_function};
 
 static PGNodeSpec_t spec =
 {
-    .Name = "Exposure",
-    .Description = "Adjust exposure of an image",
+    .Name = "Tonemap",
+    .Description = "Softly rolls off the highlights instead of harsh clipping.",
     .Category = "Basics",
 
     .NumOutputs = 1,
@@ -75,16 +70,7 @@ static PGNodeSpec_t spec =
     .NumInputs = 1,
     .InputTypes = {PGNodeImageOutput},
 
-    .HasParameters = 1,
-    .NumParameters = 1,
-    .Parameters = &(PGNodeParameterSpec_t){ .Name = "Exposure",
-                                            .Description = "Exposure in stops",
-                                            .Type = 0, /* Range */
-                                            .Integers = 0, /* Continous */
-                                            .LimitRange = 1,
-                                            .MinValue = -4.0,
-                                            .MaxValue = 4.0,
-                                            .DefaultValue = 0.0 },
+    .HasParameters = 0,
 
     .OutputFunctions = {&output_function},
 
