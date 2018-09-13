@@ -119,13 +119,12 @@ int main(int argc, char ** argv)
 
     /* Exposure node */
     PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
-    PGNodeSetValueParameter(exposure_node, 0, 7);
+    PGNodeSetValueParameter(exposure_node, 0, 9.0);
 
 
 
     /* Exposure node */
     PGNode_t * tonemap_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Tonemap"));
-    PGNodeSetValueParameter(exposure_node, 0, 7);
 
 
     /* Add output node */
@@ -190,7 +189,7 @@ int main(int argc, char ** argv)
     {
         for (int j = 0; j < 3; ++j)
         {
-            float val = floatydata[i*4+j]*255.0;
+            float val = pow(floatydata[i*4+j], 0.45)*255.0;
             if (val > 255) val = 255;
 
             bmpimg_2[i*3+j] = val;

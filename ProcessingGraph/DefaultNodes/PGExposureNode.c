@@ -27,16 +27,12 @@ static void output_function(PGNode_t * Node)
     
     /* Make image be right size */
     PGImageSetDimensions(img, PGImageGetWidth(input), PGImageGetHeight(input));
-    printf("width: %i height: %i\n", PGImageGetWidth(img), PGImageGetHeight(img));
     
     float * restrict dest = PGImageGetDataPointer(img);
     float * restrict end = dest + PGImageGetWidth(img)*PGImageGetHeight(img)*4;
     float * restrict src = PGImageGetDataPointer(input);
 
-    printf("source: %p, %f\n", src, src[3]);
-
     /* Becoz it's stops */
-    printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
     float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
 
     size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*4;

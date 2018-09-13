@@ -33,7 +33,10 @@ static void output_function(PGNode_t * Node)
     int height = libraw_get_raw_height(Raw);
 
     /* Subtract black or whatever */
-    // libraw_subtract_black(Raw);
+    libraw_raw2image(Raw);
+    libraw_subtract_black(Raw);
+
+    uint16_t * restrict imageRAW = Raw->image;
 
     /* Make image be right size */
     PGImageSetDimensions(img, width, height);
@@ -50,16 +53,33 @@ static void output_function(PGNode_t * Node)
     float * restrict pix = raw_float;
     float * restrict pixend = raw_float + width*height*4;
 
-    while (pix < pixend)
+    // while (pix < pixend)
+    // {
+    //     float value = lookup[*bayerpix] - 0.00177f;
+    //     if (value <= 0) value = 0.0f;
+    //     pix[0] = value;
+    //     pix[1] = value;
+    //     pix[2] = value;
+    //     pix[3] = 1.0;
+    //     pix += 4;
+    //     ++bayerpix;
+    // }
+    for (int i = 0; i < width*height*4; i+=4)
     {
-        float value = lookup[*bayerpix];
-        pix[0] = value;
-        pix[1] = value;
-        pix[2] = value;
-        pix[3] = 1.0;
-        pix += 4;
-        ++bayerpix;
+        raw_float[i] = lookup[imageRAW[i+2]] /* - 0.00177f */;
+        raw_float[i+1] = lookup[imageRAW[i+1]] /* - 0.00177f */;
+        raw_float[i+2] = lookup[imageRAW[i]] /* - 0.00177f */;
+        if (imageRAW[i+3] != 0) raw_float[i+1] = lookup[imageRAW[i+3]];
     }
+
+    // for (int y = 0; y < height; ++y)
+    // {
+    //     size_t loc = width * y * 4;
+    //     for (int x = 0; x < width; ++x)
+    //     {
+    //         pix[loc + x * 4] = bayerimage[loc/8+x];
+    //     }
+    // }
 
     libraw_recycle(Raw);
     libraw_close(Raw);

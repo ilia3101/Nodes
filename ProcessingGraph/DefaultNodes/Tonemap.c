@@ -37,10 +37,24 @@ static void output_function(PGNode_t * Node)
     size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*4;
     while (dest < end)
     {
-        dest[0] = src[0] / (1.0f + src[0]);
-        dest[1] = src[1] / (1.0f + src[1]);
-        dest[2] = src[2] / (1.0f + src[2]);
+        float c0 = src[0]*2-1;
+        float c1 = src[1]*2-1;
+        float c2 = src[2]*2-1;
+        if (c0 > 0.0f) c0 /= (1.0f + c0);
+        if (c1 > 0.0f) c1 /= (1.0f + c1);
+        if (c2 > 0.0f) c2 /= (1.0f + c2);
+        c0 = (c0+1)/2;
+        c1 = (c1+1)/2; 
+        c2 = (c2+1)/2;
+        dest[0] = c0;
+        dest[1] = c1;
+        dest[2] = c2;
         dest[3] = src[3];
+
+        // dest[0] = src[0] ;
+        // dest[1] = src[1] ;
+        // dest[2] = src[2] ;
+        // dest[3] = src[3];
 
         dest += 4;
         src += 4;
