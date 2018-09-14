@@ -13,6 +13,7 @@
 
 extern void writebmp(uint8_t * data, int width, int height, char * imagename);
 
+/* My realllllly good code */
 #include "../librawheaders/libraw.h"
 #include "../ProcessingGraph/ProcessingGraph.h"
 #include "../JSONParser/JSONParser.h"
