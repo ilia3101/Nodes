@@ -1,15 +1,14 @@
-/* The processing graph library */
+/* This main.c file is just testing out all of the parts */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
-#include <alloca.h>
 #include <time.h>
-
-
-#include <dlfcn.h>
+#ifdef __linux__
+#include <alloca.h>
+#endif
 
 
 extern void writebmp(uint8_t * data, int width, int height, char * imagename);
@@ -69,7 +68,7 @@ int main(int argc, char ** argv)
     // puts("4");
     libraw_recycle(Raw);
     // puts("5");
-    libraw_close(Raw); // this is basically a destructor
+    libraw_close(Raw); // basically a destructor
     // puts("6");
     puts("Done LibRawing");
 
@@ -155,10 +154,13 @@ int main(int argc, char ** argv)
     WriteJSON(jsongraph, 0, stdout);
     puts("");
 
+    /* Just as a test...
+    save graph to JSON */
     FILE * jsonfile = fopen("json_graph.json", "wb+");
     WriteJSON(jsongraph, 0, jsonfile);
-
     fclose(jsonfile);
+
+    /* Read that JSON to recreate it */
     jsonfile = fopen("json_graph.json", "r");
     char * text = calloc(100000, 1);
     fseek(jsonfile, 0, SEEK_END);

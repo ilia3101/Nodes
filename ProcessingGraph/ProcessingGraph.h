@@ -1,4 +1,5 @@
-/* Processing graph library */
+/* Image "Processing graph" library.
+ * Type names and methods have "PG" prefix  */
 
 #ifndef _ProcessingGraph_h_
 #define _ProcessingGraph_h_

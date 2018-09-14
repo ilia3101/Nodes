@@ -5,8 +5,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
-#include <alloca.h>
 #include <time.h>
+#ifdef __linux__
+#include <alloca.h>
+#endif
 
 #include "../MemoryBank/MemoryBank.h"
 

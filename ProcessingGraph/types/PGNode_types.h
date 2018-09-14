@@ -5,12 +5,14 @@
 
 
 /* This is the output type, they can be ORed to represent a node that can
- * output / accept as input different types */
+ * output / accept as input different types, but only one should be used in an
+ * actual PGNodeOutput_t return. */
 typedef int PGNodeDataType_t;
 #define PGNodeImageOutput 0x01
 #define PGNodeColourOutput 0x02
 #define PGNodeArrayOutput 0x04
 #define PGNodeValueOutput 0x04
+#define PGNodeNULLOutput 0x00 /* Use in PGNodeOutput_t to represent failure */
 /* ... 0x08, 0x10, 0x20, 0x40, 0x80 */
 
 typedef union {
@@ -23,7 +25,7 @@ typedef union {
 
 /* What a node returns as output */
 typedef struct {
-    PGNodeDataType_t type; /* If this is 0, this output is empty */
+    PGNodeDataType_t type; /* If this is PGNodeNULLOutput, output failed */
     union {
         PGImage_t * image;
         PGColour_t colour;
