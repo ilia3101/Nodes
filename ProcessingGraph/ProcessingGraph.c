@@ -8,6 +8,7 @@
 #ifdef __linux__
 #include <alloca.h>
 #endif
+
 /* TODO: Make this code file work on WINDOWS (windows.h/LoadLibrary) */
 #ifndef WIN32
 #include <dirent.h>
