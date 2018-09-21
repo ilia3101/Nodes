@@ -29,8 +29,8 @@ static void output_function(PGNode_t * Node)
 
     /* This is the bayer data */
     uint16_t * bayerimage = Raw->rawdata.raw_image;
-    int width = libraw_get_raw_width(Raw);
-    int height = libraw_get_raw_height(Raw);
+    int width = libraw_get_iwidth(Raw);
+    int height = libraw_get_iheight(Raw);
 
     /* Subtract black or whatever */
     libraw_raw2image(Raw);

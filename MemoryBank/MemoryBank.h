@@ -29,7 +29,10 @@ void MBFree(MemoryBank_t * Bank, void * Mem);
 
 /************************* END, private functions now *************************/
 
+/* Allocate */
 void * mb_malloc(MemoryBank_t * Bank, size_t AllocSize);
+/* Returns index of memory block Mem */
+int mb_find_block(MemoryBank_t * Bank, void * Mem);
 
 
 #endif

@@ -27,7 +27,7 @@ function successmessage {
 }
 
 ######################## Variables and flags and stuff #########################
-appname=ProcessingGraphApp
+appname=Nodes
 compiler=gcc
 cppcompiler=g++
 compilerflags="-Wall -Wextra -std=c99 -O3 -Ofast -m64 -DNDEBUG"
@@ -116,12 +116,20 @@ rm -rf buildoutput &> /dev/null
 echo Creating buildoutput folder...
 #this just won't fail will it
 mkdir buildoutput
-successmessage "created buildoutput folder"
+mkdir buildoutput/result
+mkdir buildoutput/objects
+successmessage "created buildoutput folders"
 echo " "
 
 
 ############################ Build all the libraries ###########################
 libraries=(ProcessingGraph MemoryBank JSONParser GraphJSON)
+# Every library must have build.sh script, which does:
+# 1. create a buildoutput folder
+# 2. place all .o objects to link in buildoutput/objects
+# 3. (optional) create 'extras' folder, the contents of which will be placed in
+#     	the same directory as the application executable itself
+# 4. returns 0 on success: 'exit 0'
 echo "Building libraries ..."
 for library in ${libraries[@]}
 do
@@ -143,7 +151,7 @@ do
 	rm .output
 	#copy everything built to main build folder
 	for f in buildoutput/*; do 
-		cp -r $f $OLDPWD/$f
+		cp -RT $f $OLDPWD/$f
 	done
 	rm -rf buildoutput &> /dev/null
 	cd - > /dev/null
@@ -159,7 +167,7 @@ touch .output
 for file in ${cfiles[@]}
 do
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
-	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> .output
+	$compiler $compilerflags -c $file.c -o buildoutput/objects/$file.o &> .output
 	if [ $? -eq 0 ]; then
 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
@@ -191,16 +199,9 @@ echo " "
 echo "Linking..."
 cd buildoutput &> /dev/null
 # create link command
-linkcommand=$compiler
-for file in ${cfiles[@]}
-do
-	linkcommand+=" "$file.o
-done
-for library in ${libraries[@]}
-do
-	linkcommand+=" "$library".a "
-done
+linkcommand="$compiler -o result/$appname"
 # linkcommand+=" -lraw"
+linkcommand+=" objects/*.o"
 linkcommand+=" ../libraw_r.a"
 linkcommand+=" "$linkflags
 
@@ -213,9 +214,21 @@ fi
 cd - &> /dev/null
 
 
+
+################## Move all things in extras folder to result ##################
+echo "Copying extra files to application directory..."
+cd buildoutput/extras &> /dev/null
+for f in *; do
+	echo $f;
+	cp -RT $f ../result/$f
+done
+cd - &> /dev/null
+
+
+
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
 buildtime=$(echo "scale=0; ($(date +%s.%N)-$buildstart)*10000.0/10.0" | bc -l)
-echo -e "\nbuild completed in $buildtime""ms." #" See results in buildoutput folder."
+echo -e "\nbuild completed in $buildtime""ms." #" See results in buildoutput/result folder."
 fi
 
 endbuild

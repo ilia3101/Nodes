@@ -82,7 +82,21 @@ int main(int argc, char ** argv)
     void * test = new_PGImage(1,1);
     void * pointer = PGImageGetDataPointer(test);
 
-    ProcessingGraphInitialiseLibrary("/home/ilia/ProcessingGraphApp/test/buildoutput/DefaultNodes");
+    /* Guess node directory by using argv[0] */
+    char * node_dir = alloca(strlen(argv[0]) + 30);
+    strcpy(node_dir, argv[0]);
+    char * end = node_dir + strlen(node_dir)-1;
+    for (; *end != '/' && *end != '\\'; --end)
+    /* Cut string off to remove executable name */
+    *end = 0x00;
+    puts(node_dir);
+    #ifndef WIN32
+    strcat(node_dir, "/DefaultNodes");
+    #else
+    strcat(node_dir, "\\DefaultNodes");
+    #endif
+
+    ProcessingGraphInitialiseLibrary(node_dir);
 
     PGGraph_t * graph = new_PGGraph();
 
@@ -119,7 +133,7 @@ int main(int argc, char ** argv)
 
     /* Exposure node */
     PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
-    PGNodeSetValueParameter(exposure_node, 0, 9.0);
+    PGNodeSetValueParameter(exposure_node, 0, 3.0);
 
 
 
@@ -155,7 +169,7 @@ int main(int argc, char ** argv)
     WriteJSON(jsongraph, 0, stdout);
     puts("");
 
-    /* Just as a test...
+    /* Just as a test...b
     save graph to JSON */
     FILE * jsonfile = fopen("json_graph.json", "wb+");
     WriteJSON(jsongraph, 0, jsonfile);
@@ -163,7 +177,7 @@ int main(int argc, char ** argv)
 
     /* Read that JSON to recreate it */
     jsonfile = fopen("json_graph.json", "r");
-    char * text = calloc(100000, 1);
+    char * text = calloc(100000, 1); /* Enough for some text */
     fseek(jsonfile, 0, SEEK_END);
     int szz = ftell(jsonfile);
     fseek(jsonfile, 0, SEEK_SET);
@@ -206,9 +220,16 @@ int main(int argc, char ** argv)
     delete_PGGraph(graph);
     delete_PGGraph(graph_made_from_json);
 
-    sleep(100);
+    // sleep(100);
 
     return 0;
 }
 
-//cloc ../ProcessingGraph/ ../test/ ../JSONParser/ ../GraphJSON/ ../MemoryBank/
+/*
+
+build command:
+./build.sh; cd buildoutput/result; ./Nodes /home/ilia/ProcessingGraphApp/test/DSC01263.ARW; cd -
+
+cloc ../ProcessingGraph/ ../test/ ../JSONParser/ ../GraphJSON/ ../MemoryBank/
+
+*/

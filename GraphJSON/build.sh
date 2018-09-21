@@ -2,9 +2,9 @@ compiler=$1
 compilerflags=$2
 
 mkdir buildoutput
+mkdir buildoutput/objects
 
-
-############################ make ProcessingGraph.a ############################
+############################## Compile all objects #############################
 #without .c extension
 compilefiles=(GraphJSON)
 
@@ -12,18 +12,8 @@ compilefiles=(GraphJSON)
 for file in ${compilefiles[@]}
 do
     #compile file
-    $compiler $compilerflags -c $file.c -o buildoutput/$file.o
-    #add it to library archive ting
-    ar rvs buildoutput/GraphJSON.a buildoutput/$file.o
-    if [ ! $? -eq 0 ]; then
-        rm -rf buildoutput
-        exit 1
-    fi
+    $compiler $compilerflags -c $file.c -o buildoutput/objects/$file.o
 done
-
-
-#don't need these anymore
-rm buildoutput/*.o
 
 
 exit 0

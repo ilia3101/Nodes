@@ -3,7 +3,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <alloca.h>
-// #include <stdint.h>
 
 #include "JSONParser.h"
 

@@ -141,7 +141,7 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
         {
             int num_parameters = JSONObjectGetNumAttributes(parameters_json);
             for (int p = 0; p < num_parameters; ++p)
-            {
+            { 
                 /* Find which parameter this is (order is not guranteed to be correct as users may edit the JSON)
                  * Everything in NodeSpec is public so this is allowed. */
                 JSONBlock_t * parameter = JSONObjectGetAttributeByIndex(parameters_json, p);

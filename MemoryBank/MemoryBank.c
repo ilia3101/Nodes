@@ -29,7 +29,6 @@ MemoryBank_t * new_MemoryBank(int UseMutex)
 void delete_MemoryBank(MemoryBank_t * Bank)
 {
     for (int i=Bank->num_memory_blocks; i>0;) free(Bank->memory_blocks[--i]);
-    // for (int i=0; i<Bank->num_memory_blocks;) free(Bank->memory_blocks[i++]);
     if (Bank->use_mutex) pthread_mutex_destroy(&Bank->lock);
     free(Bank->memory_blocks);
     free(Bank);
@@ -58,6 +57,15 @@ void * mb_malloc(MemoryBank_t * Bank, size_t AllocSize)
     return mem;
 }
 
+int mb_find_block(MemoryBank_t * Bank, void * Mem)
+{
+    int index = -1;
+    for (int i = 0; i < Bank->num_memory_blocks; ++i)
+        if (Bank->memory_blocks[i] == Mem)
+            index = i;
+    return index;
+}
+
 void * MBMalloc(MemoryBank_t * Bank, size_t AllocSize)
 {
     MemoryBankLock(Bank);
@@ -82,15 +90,9 @@ void * MBRealloc(MemoryBank_t * Bank, void * Mem, size_t NewSize)
     MemoryBankLock(Bank);
 
     /* Find where the memory is in the memory bank */
-    int index = 0;
-    while (index < Bank->num_memory_blocks && Bank->memory_blocks[index] != Mem)
-        ++index;
+    int index = mb_find_block(Bank, Mem);
 
-    if (index == Bank->num_memory_blocks)
-    {
-        /* Memory does not belong to the memory bank, maybe do something */
-    }
-    else
+    if (index != -1)
     {
         Mem = realloc(Mem, NewSize);
         Bank->memory_blocks[index] = Mem;
@@ -105,12 +107,9 @@ void MBFree(MemoryBank_t * Bank, void * Mem)
 {
     MemoryBankLock(Bank);
 
-    /* Find where the memory is in the memory bank */
-    int index = 0;
-    while (index < Bank->num_memory_blocks && Bank->memory_blocks[index] != Mem)
-        ++index;
+    int index = mb_find_block(Bank, Mem);
 
-    if (index != Bank->num_memory_blocks)
+    if (index != -1)
     {
         free(Mem);
         --Bank->num_memory_blocks;
