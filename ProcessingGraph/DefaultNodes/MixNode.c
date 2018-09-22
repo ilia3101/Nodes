@@ -60,8 +60,11 @@ static PGNodeSpec_t spec =
     .Category = "Basics",
 
     .NumOutputs = 1,
+    .OutputNames = {"Image"},
     .OutputTypes = {PGNodeImageOutput|PGNodeColourOutput},
+
     .NumInputs = 1,
+    .InputNames = {"Image A", "Image B"},
     .InputTypes = { PGNodeImageOutput|PGNodeColourOutput,
                     PGNodeImageOutput|PGNodeColourOutput },
 

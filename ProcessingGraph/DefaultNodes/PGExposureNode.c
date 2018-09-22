@@ -59,6 +59,8 @@ static void uninit(PGNode_t * Node)
 }
 
 static void (* output_functions[])(PGNode_t *) = {&output_function};
+static char * input_names[] = {"Image"};
+static char * output_names[] = {"Image"};
 
 static PGNodeSpec_t spec =
 {
@@ -67,8 +69,11 @@ static PGNodeSpec_t spec =
     .Category = "Basics",
 
     .NumOutputs = 1,
+    .OutputNames = input_names,
     .OutputTypes = {PGNodeImageOutput},
+
     .NumInputs = 1,
+    .InputNames = output_names,
     .InputTypes = {PGNodeImageOutput},
 
     .HasParameters = 1,

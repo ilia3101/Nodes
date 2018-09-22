@@ -18,6 +18,8 @@ static void uninit(PGNode_t * Node)
     return;
 }
 
+static char * input_names[] = {"Image"};
+
 static PGNodeSpec_t spec =
 {
     .Name = "Output",
@@ -26,7 +28,9 @@ static PGNodeSpec_t spec =
 
     .NumOutputs = 0,
     .OutputTypes = NULL,
+
     .NumInputs = 1,
+    .InputNames = input_names,
     .InputTypes = {PGNodeImageOutput},
 
     .HasParameters = 0,

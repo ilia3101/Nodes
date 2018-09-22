@@ -129,16 +129,27 @@ int main(int argc, char ** argv)
     int LibRaw_node_index = PGGraphAddNodeByTypeName(graph, "LibRaw");
     PGNode_t * LibRaw_node = PGGraphGetNode(graph, LibRaw_node_index);
     PGNodeSetFileParameter(LibRaw_node, 0, 0);
+    // PGNodeSetName(LibRaw_node, "ilia");
     #endif
 
     /* Exposure node */
     PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
-    PGNodeSetValueParameter(exposure_node, 0, 3.0);
+    PGNodeSetValueParameter(exposure_node, 0, 0);
 
+    PGNode_t * exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
+    PGNodeSetValueParameter(exposure_node2, 0, 3.0);
+    // PGNodeSetName(exposure_node2, "Exposure node that isn't connected");
 
+    // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
+    // PGNodeSetValueParameter(exposure_node2, 0, 3.0);
+
+    // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
+    // PGNodeSetValueParameter(exposure_node2, 0, 3.0);
+    // PGNodeSetName(exposure_node2, "A custom name");
 
     /* Exposure node */
     PGNode_t * tonemap_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Tonemap"));
+    PGNodeSetName(tonemap_node, "tone mapping node");
 
 
     /* Add output node */
@@ -147,11 +158,22 @@ int main(int argc, char ** argv)
     PGNode_t * output_node = PGGraphGetNode(graph, output_node_index);
     // PGGraphGetNode(graph, output_node_index);
 
+    // /* Output node input #0 to tonemap node output #0 */
+    // PGNodeConnect(output_node, 0, tonemap_node, 0);
+    // /* Tonemap node input #0 to exposure node output #0 */
+    // PGNodeConnect(tonemap_node, 0, exposure_node, 0);
+    // /* exposure node input #0 to LibRaw node output #0 */
+    // PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
+
     /* Output node input #0 to tonemap node output #0 */
     PGNodeConnect(output_node, 0, tonemap_node, 0);
-    /* Tonemap node input #0 to exposure node output #0 */
-    PGNodeConnect(tonemap_node, 0, exposure_node, 0);
+    /* Tonemap node input #0 to exposure node 2 output #0 */
+    PGNodeConnect(tonemap_node, 0, exposure_node2, 0);
     /* exposure node input #0 to LibRaw node output #0 */
+    PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
+    /* exposure node2 input #0 to exposure node node output #0 */
+    PGNodeConnect(exposure_node2, 0, exposure_node, 0);
+    /* exposure node 2 input #0 to LibRaw node output #0 */
     PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
 
 
@@ -187,9 +209,12 @@ int main(int argc, char ** argv)
     // WriteJSON(graph_json, 1, jsonfile);
 
     PGGraph_t * graph_made_from_json = JSONToPGGraph(graph_json, "./");
+    WriteJSON(PGGraphToJSON(graph_made_from_json, ""), 1, stdout);
+    puts("\nwrote the JSONN");
 
     /* Now run the graph read from JSON */
     PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
+    puts("hello");
     // graph_output_image = PGGraphGetOutput(graph_made_from_json);
 
     /**************************************************************************/

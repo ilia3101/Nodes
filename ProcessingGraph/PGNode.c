@@ -24,6 +24,8 @@ PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph)
     PGNode_t * node = MBMalloc(mb, sizeof(PGNode_t));
     node->memory_bank = mb;
 
+    PGNodeSetName(node, Spec->Name);
+
     node->graph = Graph;
     node->spec = Spec;
     node->input_nodes = MBZeroAlloc(mb, Spec->NumInputs * sizeof(PGNode_t *));
@@ -52,10 +54,21 @@ void delete_PGNode(PGNode_t * Node)
     delete_MemoryBank(Node->memory_bank);
 }
 
+void PGNodeSetName(PGNode_t * Node, char * Name)
+{
+    strncpy(Node->name, Name, sizeof(Node->name));
+}
+
+char * PGNodeGetName(PGNode_t * Node)
+{
+    return Node->name;
+}
+
 PGNodeOutput_t * PGNodeGetOutput(PGNode_t * Node, int OutputIndex)
 {
     /* TODO: add check if changed here for efficiency */
     PGNodeGetSpec(Node)->OutputFunctions[OutputIndex](Node);
+    // printf("finished getting output from node %s\n", PGNodeGetName(Node));
     return &Node->outputs[OutputIndex];
 }
 

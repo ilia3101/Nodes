@@ -21,6 +21,10 @@ void delete_PGNode(PGNode_t * Node);
 /* Called when parameters changed- flags all nodes connected to it (forwards) */
 void PGNodeFlagChanged(PGNode_t * Node);
 
+/* Name getter setter. Name should be shorter than 127 characters */
+void PGNodeSetName(PGNode_t * Node, char * Name);
+char * PGNodeGetName(PGNode_t * Node);
+
 /* Getters */
 PGNodeOutput_t * PGNodeGetOutput(PGNode_t * Node, int OutputIndex);
 int PGNodeGetNumInputs(PGNode_t * Node);

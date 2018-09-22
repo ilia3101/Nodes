@@ -43,6 +43,9 @@ typedef struct PGNode PGNode_t;
 /* The node itself */
 typedef struct PGNode
 {
+    /* This node's unique name. Hopefully no longer than 127 charachters */
+    char name[128];
+
     /* Graph which owns this node... */
     /* PGGraph_t */void * graph;
 
@@ -124,8 +127,11 @@ struct PGNodeSpec
     char * Category; /*  */
 
     int NumOutputs;
+    char ** OutputNames;
     PGNodeDataType_t * OutputTypes; /* What data type each output returns */
+
     int NumInputs;
+    char ** InputNames;
     PGNodeDataType_t * InputTypes; /* What data type each input accepts */
 
     /* Parameters for this node (to be used for interface) */

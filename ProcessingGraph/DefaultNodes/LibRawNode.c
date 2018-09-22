@@ -112,6 +112,7 @@ static PGNodeParameterSpec_t parameters[] =
 };
 
 static void (* output_functions[])(PGNode_t *) = {&output_function};
+static char * output_names[] = {"Bayer image"}; 
 
 static PGNodeSpec_t spec =
 {
@@ -119,8 +120,10 @@ static PGNodeSpec_t spec =
     .Description = "Reads a camera raw file using LibRaw",
     .Category = "Input",
 
-    .NumOutputs = 3,
-    .OutputTypes = {PGNodeImageOutput, PGNodeValueOutput, PGNodeValueOutput},
+    .NumOutputs = 1,
+    .OutputNames = output_names,
+    .OutputTypes = {PGNodeImageOutput},
+
     .NumInputs = 0,
     .InputTypes = NULL,
 

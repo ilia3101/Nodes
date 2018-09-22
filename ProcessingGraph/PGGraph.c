@@ -31,6 +31,7 @@ PGGraph_t * new_PGGraph()
     graph->nodes = MBMalloc(mb, sizeof(PGNode_t *));
 
     graph->num_files = 0;
+    graph->current_file_id = 0;
     graph->files = MBMalloc(mb, sizeof(pg_file_t));
 
     return graph;
@@ -44,12 +45,36 @@ void delete_PGGraph(PGGraph_t * Graph)
 
 int PGGraphAddNode(PGGraph_t * Graph, PGNodeSpec_t * Type)
 {
-    Graph->nodes = MBRealloc( Graph->memory_bank, Graph->nodes,
-                              sizeof(PGNode_t *) * (Graph->num_nodes+1) );
-
     PGNode_t * node = new_PGNode(Type, Graph);
     PGNodeSetGraph(node, Graph);
+
+    Graph->nodes = MBRealloc( Graph->memory_bank, Graph->nodes,
+                              sizeof(PGNode_t *) * (Graph->num_nodes+1) );
     Graph->nodes[Graph->num_nodes] = node;
+
+    /* Increment name number until it is unique. Not too efficient but simple */
+    int node_with_same_name_exists = 0, attempts = 0;
+    char name[128];
+    strcpy(name, PGNodeGetName(node));
+
+    do {
+        node_with_same_name_exists = 0;
+        for (int n = 0; n < Graph->num_nodes; ++n)
+        {
+            if (!strcmp(name, PGNodeGetName(Graph->nodes[n]))
+                && strlen(name) == strlen(PGNodeGetName(Graph->nodes[n])) )
+            {
+                node_with_same_name_exists = 1;
+                break;
+            }
+        }
+        if (node_with_same_name_exists)
+        {
+            snprintf(name, 128, "%s.%03i", PGNodeGetName(node), ++attempts);
+        }
+    } while (node_with_same_name_exists);
+
+    PGNodeSetName(node, name);
 
     return Graph->num_nodes++;
 }
@@ -136,7 +161,6 @@ char * PGGraphGetFilePath(PGGraph_t * Graph, int FileID)
     for (int i = 0; i < Graph->num_files; ++i)
         if (Graph->files[i].id == FileID) path = Graph->files[i].path;
 
-    puts (path);
     return path;
 }
 
