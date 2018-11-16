@@ -161,6 +161,7 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
         /* Now set parameters if node has them and JSON has info about them */
         PGNodeSpec_t * spec = PGNodeGetSpec(node);
         JSONBlock_t * parameters_json = JSONObjectGetAttributeByName(node_json, "parameter_states");
+
         if (spec->HasParameters && parameters_json != NULL)
         {
             int num_parameters = JSONObjectGetNumAttributes(parameters_json);
@@ -212,31 +213,24 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
     /* Now connect all the nodes */
     for (int n = 0; n < num_nodes; ++n)
     {
-        // printf("hi %i\n", n+1);
-        // puts("Node");
         PGNode_t * node = PGGraphGetNode(graph, n);
         PGNodeSpec_t * spec = PGNodeGetSpec(node);
-        // puts(spec->Name);
         JSONBlock_t * node_json = JSONArrayGetElement(nodes, n);
 
-        JSONBlock_t * input_nodes = JSONObjectGetAttributeByName(node_json, "input_nodes");
-        JSONBlock_t * input_node_output_indexes = JSONObjectGetAttributeByName(node_json, "input_node_output_indexes");
+        JSONBlock_t * inputs = JSONObjectGetAttributeByName(node_json, "inputs");
 
-        if ( input_nodes != NULL && input_node_output_indexes != NULL &&
-             JSONArrayGetLength(input_nodes) == spec->NumInputs )
+        if (inputs != NULL)
         {
-            for (int i = 0; i < spec->NumInputs; ++i)
+            int num_connected_inputs = PGObjectGetNumAttributes(inputs);
+            for (int i = 0; i < num_connected_inputs; ++i)
             {
-                int connect_to_node_index = JSONNumberGetValue(JSONArrayGetElement(input_nodes, i));
-                int connect_to_node_output_index = JSONNumberGetValue(JSONArrayGetElement(input_node_output_indexes, i));
-                /* Only connect if it is actually connected */
-                if (connect_to_node_index != -1)
-                {
-                    PGNodeConnect( node, i,
-                                   PGGraphGetNode(graph, connect_to_node_index),
-                                   connect_to_node_output_index
-                                   );
-                }
+                JSONBlock_t * input = JSONObjectGetAttributeByIndex(inputs, i);
+                char * input_name = JSONObjectGetAttributeName(inputs, i);
+                char * input_node_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 0));
+                PGNode_t * input_node = PGGraphGetNodeByName(graph, input_node_name);
+                char * input_node_output_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 1));
+
+                PGNodeConnect(node, input_name, input_node, input_node_output_name);
             }
         }
     }
