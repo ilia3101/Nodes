@@ -112,6 +112,19 @@ PGNode_t * PGGraphGetNode(PGGraph_t * Graph, int Index)
     return Graph->nodes[Index];
 }
 
+PGNode_t * PGGraphGetNodeByName(PGGraph_t * Graph, char * Name)
+{
+    int num_nodes = PGGraphGetNumNodes(Graph);
+    for (int n = 0; n < num_nodes; ++n)
+    {
+        PGNode_t * node = PGGraphGetNode(Graph, n);
+        char * name = PGNodeGetName(node);
+        if (!strcmp(name, Name) && strlen(name) == strlen(Name))
+            return node;
+    }
+    return NULL;
+}
+
 /* Gets the output of a node */
 PGImage_t * PGGraphGetOutput(PGGraph_t * Graph)
 {

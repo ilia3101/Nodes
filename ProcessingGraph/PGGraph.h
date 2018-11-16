@@ -20,6 +20,7 @@ int PGGraphGetNumNodes(PGGraph_t * Graph);
 
 /* Get pointer to node */
 PGNode_t * PGGraphGetNode(PGGraph_t * Graph, int Index);
+PGNode_t * PGGraphGetNodeByName(PGGraph_t * Graph, char * Name);
 
 /* Get index of node in graph. Nope should be part of that graph */
 int PGGraphGetNodeIndex(PGGraph_t * Graph, PGNode_t * Node);
