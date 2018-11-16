@@ -221,7 +221,7 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
 
         if (inputs != NULL)
         {
-            int num_connected_inputs = PGObjectGetNumAttributes(inputs);
+            int num_connected_inputs = JSONObjectGetNumAttributes(inputs);
             for (int i = 0; i < num_connected_inputs; ++i)
             {
                 JSONBlock_t * input = JSONObjectGetAttributeByIndex(inputs, i);
