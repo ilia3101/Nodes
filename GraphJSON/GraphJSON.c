@@ -230,7 +230,7 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
                 PGNode_t * input_node = PGGraphGetNodeByName(graph, input_node_name);
                 char * input_node_output_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 1));
 
-                PGNodeConnect(node, input_name, input_node, input_node_output_name);
+                PGNodeConnectByInputOutputNames(node, input_name, input_node, input_node_output_name);
             }
         }
     }
