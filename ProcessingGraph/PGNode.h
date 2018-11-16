@@ -48,6 +48,10 @@ void PGNodeDisconnect( PGNode_t * Node,
                        int NodeInputIndex,
                        PGNode_t * InputNode,
                        int InputNodeOutputIndex );
+void PGNodeConnectByInputOutputNames( PGNode_t * Node,
+                                      char * NodeInputName,
+                                      PGNode_t * InputNode,
+                                      char * InputNodeOutputName );
 
 /********************************* PARAMETERS *********************************/
 

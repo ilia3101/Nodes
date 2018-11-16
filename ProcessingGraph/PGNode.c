@@ -119,6 +119,39 @@ void PGNodeConnect( PGNode_t * Node,
     InputNode->output_nodes[InputNodeOutputIndex][nodes-1] = Node;
 }
 
+void PGNodeConnectByInputOutputNames( PGNode_t * Node,
+                                      char * NodeInputName,
+                                      PGNode_t * InputNode,
+                                      char * InputNodeOutputName )
+{
+    int node_input_index = -1;
+    PGNodeSpec_t * spec = PGNodeGetSpec(Node);
+    for (int i = 0; i < spec->NumInputs; ++i)
+    {
+        if (!strcmp(NodeInputName, spec->InputNames[i]) &&
+            strlen(NodeInputName) == strlen(spec->InputNames[i]))
+        {
+            node_input_index = i;
+            break;
+        }
+    }
+
+    int input_node_output_index = -1;
+    spec = PGNodeGetSpec(InputNode);
+    for (int i = 0; i < spec->NumOutputs; ++i)
+    {
+        if (!strcmp(InputNodeOutputName, spec->OutputNames[i]) &&
+            strlen(InputNodeOutputName) == strlen(spec->OutputNames[i]))
+        {
+            input_node_output_index = i;
+            break;
+        }
+    }
+
+    if (input_node_output_index != -1 && node_input_index != -1)
+        PGNodeConnect(Node,node_input_index,InputNode,input_node_output_index);
+}
+
 void PGNodeDisconnect( PGNode_t * Node,
                        int NodeInputIndex,
                        PGNode_t * InputNode,
