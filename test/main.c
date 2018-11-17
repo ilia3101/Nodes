@@ -215,6 +215,7 @@ int main(int argc, char ** argv)
     /* Now run the graph read from JSON */
     PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
     puts("hello");
+
     // graph_output_image = PGGraphGetOutput(graph_made_from_json);
 
     /**************************************************************************/
