@@ -143,7 +143,7 @@ int main(int argc, char ** argv)
     // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
     // PGNodeSetValueParameter(exposure_node2, 0, 3.0);
 
-    // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
+    // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByT+++++++++++++ypeName(graph, "Exposure"));
     // PGNodeSetValueParameter(exposure_node2, 0, 3.0);
     // PGNodeSetName(exposure_node2, "A custom name");
 
@@ -258,4 +258,4 @@ build command:
 
 cloc ../ProcessingGraph/ ../test/ ../JSONParser/ ../GraphJSON/ ../MemoryBank/
 
-*/
+*/lkflks
