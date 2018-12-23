@@ -1,0 +1,3 @@
+[submodule "UILibrary"]
+	path = UILibrary
+	url = https://gitlab.com/ilia3101/UILibrary.git
