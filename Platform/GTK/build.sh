@@ -34,7 +34,7 @@ cppcompiler=g++
 compilerflags="-Wall -Wextra -std=c99 -O3 -Ofast -m64 -DNDEBUG"
 #system specific
 if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux
-	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -ldl -rdynamic"
+	linkflags="-lstdc++ -lm -fopenmp -lOpenCL -lOpenGL -lGLX -ldl -lGLEW -lGLU `pkg-config --libs gtk+-3.0` -rdynamic"
 elif [[ "$OSTYPE" == "darwin"* ]]; then #mac
 	linkflags="-lstdc++ -lm -framework OpenGL -framework OpenGL -ldl -rdynamic"
 else
@@ -135,7 +135,7 @@ echo "Building libraries ..."
 for library in ${libraries[@]}
 do
 	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
-	cd ../$library > /dev/null
+	cd ../../$library > /dev/null
 	touch .output
 	# Each library has its own build script whcih outputs to a buildoutput folder
 	./build.sh $compiler $compilerflags &> .output
@@ -161,38 +161,29 @@ echo " "
 
 
 ######## Now compile C files that just need to be compiled on their own ########
-echo "Compiling C files ..."
-# without .c extension
-cfiles=(main bitmap)
-touch .output
-for file in ${cfiles[@]}
-do
-	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
-	$compiler $compilerflags -c $file.c -o buildoutput/objects/$file.o &> .output
-	if [ $? -eq 0 ]; then
-		if [[ "$OSTYPE" == "linux-gnu" ]]; then
-			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
-			successmessage "compiled $file in $ftime ms"
-		else
-			successmessage "compiled $file"
-		fi
-	else
-		death "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
-	fi
-done
-rm .output
-echo " "
+# echo "Compiling C files ..."
+# # without .c extension
+# cfiles=(main bitmap)
+# touch .output
 # for file in ${cfiles[@]}
 # do
-# 	$compiler $compilerflags -c $file.c -o buildoutput/$file.o &> /dev/null
+# 	if [[ "$OSTYPE" == "linux-gnu" ]]; then startfile=$(date +%s.%N); fi
+# 	$compiler $compilerflags -c $file.c -o buildoutput/objects/$file.o &> .output
 # 	if [ $? -eq 0 ]; then
-# 		successmessage "Compiled $file.c"
+# 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
+# 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
+# 			successmessage "compiled $file in $ftime ms"
+# 		else
+# 			successmessage "compiled $file"
+# 		fi
 # 	else
-# 		rm -rf buildoutput &> /dev/null
-# 		death "Failed to compile $file.c"
+# 		death "$file did not compile:\n\x1b[93;41m$(cat .output)\x1b[0m"
 # 	fi
 # done
+# rm .output
 # echo " "
+
+$compiler $compilerflags -c main.c `pkg-config --cflags gtk+-3.0` -o buildoutput/objects/main.o
 
 
 

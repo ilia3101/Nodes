@@ -15,5 +15,4 @@ do
     $compiler $compilerflags -c $file.c -o buildoutput/objects/$file.o
 done
 
-
 exit 0
