@@ -79,11 +79,6 @@ if hash $compiler 2>/dev/null; then
 else
 	death "C compiler \"$compiler\" does not exist"
 fi
-# if hash $cppcompiler 2>/dev/null; then
-# 	successmessage "C++ compiler \"$cppcompiler\" exists"
-# else
-# 	death "C++ compiler \"$cppcompiler\" does not exist"
-# fi
 echo " "
 
 
@@ -124,7 +119,7 @@ echo " "
 
 
 ############################ Build all the libraries ###########################
-libraries=(ProcessingGraph MemoryBank JSONParser GraphJSON UILibrary)
+libraries=(ProcessingGraph MemoryBank JSONParser GraphJSON UILibrary NodeEditorWidget)
 # Every library must have build.sh script, which does:
 # 1. create a buildoutput folder
 # 2. place all .o objects to link in buildoutput/objects
@@ -138,7 +133,7 @@ do
 	cd ../../$library > /dev/null
 	touch .output
 	# Each library has its own build script whcih outputs to a buildoutput folder
-	./build.sh $compiler $compilerflags &> .output
+	./build.sh $compiler $compilerflags # &> .output
 	if [ $? -eq 0 ]; then
 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
@@ -183,7 +178,7 @@ echo " "
 # rm .output
 # echo " "
 
-$compiler $compilerflags -c main.c `pkg-config --cflags gtk+-3.0` -o buildoutput/objects/main.o
+$compiler -O3 -c main.c `pkg-config --cflags gtk+-3.0` -o buildoutput/objects/main.o
 
 
 

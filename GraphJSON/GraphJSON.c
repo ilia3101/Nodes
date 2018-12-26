@@ -46,7 +46,7 @@ JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph, char * JSONFilePath)
         if (num_inputs > 0)
         {
             // JSONBlock_t * blocks = new_EmptyJSONArray(json_node, num_inputs); /* Which index block goes to input */
-            // JSONBlock_t * indexes = new_EmptyJSONArray(json_node, num_inputs); /* Which output of block goes to input */
+            //JSONBlock_t * indexes = new_EmptyJSONArray(json_node, num_inputs); /*Which output of block goes to input*/
 
             // for (int i = 0; i < num_inputs; ++i)
             // {
@@ -72,7 +72,7 @@ JSONBlock_t * PGGraphToJSON(PGGraph_t * Graph, char * JSONFilePath)
                     int output_index = PGNodeGetInputNodeOutputIndex(node, i);
                     // JSONObjectSetAttributeByIndex(input, 1, new_JSONNull(input));
                     JSONObjectSetAttributeByIndex(input, 1, new_JSONString(json_node,
-                                                                 PGNodeGetSpec(input_node)->OutputNames[output_index]));
+                                                  PGNodeGetSpec(input_node)->OutputNames[output_index]));
                     JSONObjectSetAttributeByIndex(inputs, i, input);
                 }
                 else JSONObjectSetAttributeByIndex(inputs, i, new_JSONNull(inputs));

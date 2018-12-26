@@ -10,7 +10,7 @@
 
 
 /* This node only needs one output function */
-static void output_function(PGNode_t * Node, PGNodeOutput_t * Ouptut)
+static void output_function(PGNode_t * Node, PGNodeOutput_t * Output)
 {
     PGNodeOutput_t * input1 = PGNodeGetInput(Node, 0);
     PGNodeOutput_t * input2 = PGNodeGetInput(Node, 1);
@@ -18,6 +18,16 @@ static void output_function(PGNode_t * Node, PGNodeOutput_t * Ouptut)
     return input1;
 
     // if (input1->type == PGNodeImageOutput && input2->type == PGNode)
+}
+
+/* The cleanup function that frees the output or whatever */
+static void output_cleanup_function(PGNode_t * Node, PGNodeOutput_t * Output)
+{
+    /* Only needed if it is an image */
+    if (Output->type == PGNodeImageOutput)
+    {
+        delete_PGImage(Output->value.image);
+    }
 }
 
 static void init(PGNode_t * Node)
@@ -36,7 +46,7 @@ static PGNodeParameterSpec_t parameters[] =
 {
     {
         .Name = "Blend mode",
-        .Description = "How to blend the two images",
+        .Description = "How the inputs are blended",
         .Type = PGNodeOptionsParameter,
         .NumOptions = 4,
         .Options = {"Normal", "Add", "Subtract", "Multiply", "Difference"}
@@ -73,6 +83,7 @@ static PGNodeSpec_t spec =
     .Parameters = &(PGNodeParameterSpec_t){  },
 
     .OutputFunctions = {&output_function},
+    .OutputCleanupFunctions = {&output_cleanup_function},
 
     .Init = &init,
     .UnInit = &uninit

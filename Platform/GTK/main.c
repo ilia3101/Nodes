@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
     // UIFrame_t * MainDiv_new = new_UIFrame(UIDivType());
 
-    mainDiv = ui_test();
+    mainDiv = new_AppWindow();
 
     UIImage_t * pic = new_UIImage(width*scalefac+0.5, height*scalefac+0.5, Pixels_RGB_48i);
 
@@ -238,20 +238,20 @@ GLuint textures[2];
 
 
 // Shader sources
-const GLchar* vertexSource = "glsl("
- "   #version 150 core"
-  "  in vec2 position;"
-"    in vec3 color;"
-"    in vec2 texcoord;"
-"    out vec3 Color;"
-"    out vec2 Texcoord;"
-"    void main()"
-"    {"
-"        Color = color;"
-"        Texcoord = texcoord;"
-"        gl_Position = vec4(position, 0.0, 1.0);"
-"    }"
-")glsl";
+const GLchar* vertexSource = R"glsl(
+    #version 150 core
+    in vec2 position;
+    in vec3 color;
+    in vec2 texcoord;
+    out vec3 Color;
+    out vec2 Texcoord;
+    void main()
+    {
+        Color = color;
+        Texcoord = texcoord;
+        gl_Position = vec4(position, 0.0, 1.0);
+    }
+)glsl";
 /* This version only shows texKitten */
 /* Fragemtn shader that converts from XYZ to sRGB (or monitor space) */
 // const GLchar * fragmentSource = R"glsl(
@@ -279,17 +279,17 @@ const GLchar* vertexSource = "glsl("
 //         outColor = vec4(pow(Colour, vec3(1/2.2))*alpha, alpha);
 //     }
 // )glsl";
-const GLchar* fragmentSource = "glsl("
-"    #version 150 core"
-"    in vec2 Texcoord;"
-"    uniform sampler2D texKitten;"
-"    void main()"
-"    {"
-"        vec4 pixel = texture(texKitten, Texcoord);"
-"        gl_FragColor = pixel * pixel[3];"
-"        // gl_FragColor = pixel;"
-"    }"
-")glsl";
+const GLchar* fragmentSource = R"glsl(
+    #version 150 core
+    in vec2 Texcoord;
+    uniform sampler2D texKitten;
+    void main()
+    {
+        vec4 pixel = texture(texKitten, Texcoord);
+        gl_FragColor = pixel * pixel[3];
+        // gl_FragColor = pixel;
+    }
+)glsl";
 
 // #define UseTransparentWindow
 
@@ -672,6 +672,5 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
 
 
 /*
-
-rm *.o; rm a.out; clear; clear; gcc -O3 -c `pkg-config --cflags gtk+-3.0` test/GTKTest.c; gcc -O3 -c UIGraphics.c UIFrame.c Types/UISlider.c graphics/ui_text.c Types/UILabel.c Types/UIButton.c Types/UIDiv.c; gcc GTKTest.o UIFrame.o ui_text.o UIGraphics.o UIButton.o UILabel.o UIDiv.o UISlider.o  -lm -lGL -lGLEW -lGLU `pkg-config --libs gtk+-3.0`; ./a.out
+./build.sh; cd buildoutput/result; ./Nodes; cd -
 */

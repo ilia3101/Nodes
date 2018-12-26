@@ -1,6 +1,8 @@
 #ifndef _GraphJSON_h_
 #define _GraphJSON_h_
 
+/* For saving graph object to JSON and back, in a very user readable way */
+
 #include "../JSONParser/JSONParser.h"
 #include "../ProcessingGraph/ProcessingGraph.h"
 
