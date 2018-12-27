@@ -15,7 +15,7 @@ function endbuild {
 }
 function errormessage {
 	if [[ "$OSTYPE" == "darwin"* ]]; then printf "$failemojay   $1\n"
-	else printf "$failemojay $1\n"; fi
+	else printf "$failemojay  $1\n"; fi
 }
 function death {
 	errormessage "$1"
@@ -24,7 +24,7 @@ function death {
 }
 function successmessage {
 	if [[ "$OSTYPE" == "darwin"* ]]; then printf "$successemojay  $1\n"
-	else printf "$successemojay $1\n"; fi
+	else printf "$successemojay  $1\n"; fi
 }
 
 ######################## Variables and flags and stuff #########################
@@ -38,7 +38,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then #linux
 elif [[ "$OSTYPE" == "darwin"* ]]; then #mac
 	linkflags="-lstdc++ -lm -framework OpenGL -framework OpenGL -ldl -rdynamic"
 else
-	echo Unknown os
+	echo "Unknown OS"
 fi
 
 
@@ -133,7 +133,7 @@ do
 	cd ../../$library > /dev/null
 	touch .output
 	# Each library has its own build script whcih outputs to a buildoutput folder
-	./build.sh $compiler $compilerflags # &> .output
+	./build.sh $compiler $compilerflags &> .output
 	if [ $? -eq 0 ]; then
 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)

@@ -14,7 +14,14 @@
 #endif
 #include <stdio.h>
 
+
+/* My good code */
+#include "../../librawheaders/libraw.h"
+#include "../../ProcessingGraph/ProcessingGraph.h"
+#include "../../JSONParser/JSONParser.h"
+#include "../../GraphJSON/GraphJSON.h"
 #include "../../UILibrary/UILibrary.h"
+
 
 #include <GL/glew.h>
 #include <gtk/gtk.h>
@@ -203,7 +210,7 @@ void button_press_event(GtkWidget * widget, GdkEventButton * event, gpointer use
         puts("ButtonUP");
 
     if (event->button == 1 || event->button == 2 || event->button == 3)
-        UIFrameMouseButton(mainDiv, event->button, upordown, mouse_x/scalefac, mouse_y/scalefac, UIFrameGetRect(mainDiv, UIMakeRect(0,0)));
+        UIFrameMouseButton(mainDiv, event->button, upordown, x_scaled,y_scaled,UIFrameGetRect(mainDiv,UIMakeRect(0,0)));
 
     if (UIFrameGetNeedsRedraw(mainDiv))
         gtk_widget_queue_draw(main_window);
@@ -227,7 +234,7 @@ void motion_notify_event(GtkWidget * widget, GdkEventMotion * event)
 
     printf("mouse %i, %i\n", mouse_x, mouse_y);
 
-    UIFrameSetMouseLocation(mainDiv, mouse_x/scalefac, mouse_y/scalefac, UIFrameGetRect(mainDiv, UIMakeRect(0,0)));
+    UIFrameSetMouseLocation(mainDiv, mouse_x/scalefac, mouse_y/scalefac, UIFrameGetRect(mainDiv,UIMakeRect(0,0)));
 
     if (UIFrameGetNeedsRedraw(mainDiv))
         gtk_widget_queue_draw(main_window);
@@ -585,8 +592,6 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
         puts("RESIZED");
     }
 
-    // printf("MainWindowHeight %i, old_height %i, MainWindowWidth %i, old_width %i\n", MainWindowHeight, old_height, MainWindowWidth, old_width);
-
 
     printf("scale factor: %f\n", scale_factor_gtk);
     double draw_scale_fac = scalefac*scale_factor_gtk;
@@ -629,10 +634,12 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
     start = clock();
     char * texfunc;
     if (resize) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, MainWindowWidth, MainWindowHeight, 0, GL_RGBA, GL_UNSIGNED_SHORT, DrawPic->Data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, MainWindowWidth, MainWindowHeight,
+                     0, GL_RGBA, GL_UNSIGNED_SHORT, DrawPic->Data);
         texfunc = "glTexImage2D";
     } else {
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, MainWindowWidth,  MainWindowHeight, GL_RGBA, GL_UNSIGNED_SHORT, DrawPic->Data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, MainWindowWidth,  MainWindowHeight,
+                        GL_RGBA, GL_UNSIGNED_SHORT, DrawPic->Data);
         texfunc = "glTexSubImage2D";
     }
     diff = clock() - start;
