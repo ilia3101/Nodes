@@ -16,7 +16,6 @@
 
 
 /* My good code */
-#include "../../librawheaders/libraw.h"
 #include "../../ProcessingGraph/ProcessingGraph.h"
 #include "../../JSONParser/JSONParser.h"
 #include "../../GraphJSON/GraphJSON.h"
@@ -72,14 +71,20 @@ int fghjkl = 0;
 int X, Y;
 
 
+PGGraph_t * graph;
+UICoordinate_t positions[] = {UIMakeCoordinate(23,300), UIMakeCoordinate(300,300), UIMakeCoordinate(550,300), UIMakeCoordinate(880,300)};
 
 #include "BuildInterface.c"
+#include "GraphTest.c"
 
 GTimer * Timer;
 
 
+
 int main(int argc, char *argv[])
 {
+    graph = GraphTest("/home/ilia/ProcessingGraphApp/test/5D2.CR2");
+
     Timer = g_timer_new();
     g_timer_start (Timer);
     int width = 507;

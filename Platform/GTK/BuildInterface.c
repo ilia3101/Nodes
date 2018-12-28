@@ -32,7 +32,9 @@ UIFrame_t * new_AppWindow()
     UIFrameSetXCoordinateRelative(node_graph_widget, 0, 0);
     UIFrameSetYCoordinateRelative(node_graph_widget, 0, 0);
 
-    FrameAddSubframe(main_div, node_graph_widget);
+    NodeEditorSetGraph(node_graph_widget, graph, positions);
+
+    UIFrameAddSubframe(main_div, node_graph_widget);
 
     return main_div;
 }
