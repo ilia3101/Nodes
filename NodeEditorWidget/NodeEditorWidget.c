@@ -50,38 +50,43 @@ UIFrame_t * NE_create_interface_for_node(PGNodeSpec_t * Spec)
 {
     UIFrame_t * main = new_UIFrame(UIDivType(), "Node");
 
-    int num_units = Spec->NumInputs + Spec->NumParameters + Spec->NumOutputs;
+    // int num_units = Spec->NumInputs + Spec->NumParameters + Spec->NumOutputs;
 
-    UIFrame_t ** units = alloca(num_units * sizeof(UIFrame_t *));
+    // UIFrame_t ** units = alloca(num_units * sizeof(UIFrame_t *));
 
-    /* Create all the units */
-    for (int u = 0; u < num_units; ++u)
-    {
-        UIFrame_t * unit = new_UIFrame(UIDivType(), "unit");
-        UIDivSetBackgroundColour(unit, UIMakeColour(0.3,0.3,0.3,1.0));
-        UIDivSetBorderColour(unit, UIMakeColour(0.6,0.6,0.6,1.0));
-        UIDivSetBorderThickness(unit, 1.0);
-        units[u] = unit;
-    }
+    // /* Create all the units */
+    // for (int u = 0; u < num_units; ++u)
+    // {
+    //     UIFrame_t * unit = new_UIFrame(UIDivType(), "unit");
+    //     UIDivSetBackgroundColour(unit, UIMakeColour(0.3,0.3,0.3,1.0));
+    //     UIDivSetBorderColour(unit, UIMakeColour(0.6,0.6,0.6,1.0));
+    //     UIDivSetBorderThickness(unit, 1.0);
+    //     // UIFrameAddSubframe(main, unit);
+    //     units[u] = unit;
+    // }
 
-    /* Add outputs */
-    for (int o = 0; o < Spec->NumOutputs; ++o)
-    {
-        UIFrame_t * label = new_UIFrame(UILabelType(), "label");
-        UIFrameSetXCoordinateRelative(label, 2, 2);
-        UIFrameSetYCoordinateRelative(label, 2, 2);
-        UILabelSetText(label, Spec->OutputNames[o]);
-        
-    }
+    // /* Part 2 */
 
-    /* Add parameters */
-    for (int p = 0; p < Spec->NumParameters; ++p)
-    {
-        UIFrame_t * label = new_UIFrame(UILabelType(), "label");
-        UIFrameSetXCoordinateRelative(label, 2, 2);
-        UIFrameSetYCoordinateRelative(label, 2, 2);
-        UILabelSetText(label, Spec->Parameters[p].Name);
-    }
+    // /* Add outputs */
+    // for (int o = 0; o < Spec->NumOutputs; ++o)
+    // {
+    //     UIFrame_t * label = new_UIFrame(UILabelType(), "label");
+    //     UIFrameSetXCoordinateRelative(label, 2, 2);
+    //     UIFrameSetYCoordinateRelative(label, 2, 2);
+    //     UILabelSetText(label, Spec->OutputNames[o]);
+    //     UIFrameAddSubframe(units)
+    // }
+
+    // /* Add parameters */
+    // for (int p = 0; p < Spec->NumParameters; ++p)
+    // {
+    //     UIFrame_t * label = new_UIFrame(UILabelType(), "label");
+    //     UIFrameSetXCoordinateRelative(label, 2, 2);
+    //     UIFrameSetYCoordinateRelative(label, 2, 2);
+    //     UILabelSetText(label, Spec->Parameters[p].Name);
+    // }
+
+    // /* Add outputs */
 
     return main;
 }
