@@ -48,45 +48,54 @@ typedef struct {
 /* Create UIFrame interface for a node type */
 UIFrame_t * NE_create_interface_for_node(PGNodeSpec_t * Spec)
 {
+    int num_units = Spec->NumInputs + Spec->NumParameters + Spec->NumOutputs;
+
     UIFrame_t * main = new_UIFrame(UIDivType(), "Node");
+    UIFrameSetXCoordinateAbsolute(main, 0, 0, 0);
+    UIFrameSetYCoordinateAbsolute(main, 0, NodeUnitHeight*num_units+20, 0);
 
-    // int num_units = Spec->NumInputs + Spec->NumParameters + Spec->NumOutputs;
+    UIDivSetBackgroundColour(main, UIMakeColour(0.1,0.1,0.1,1.0));
 
-    // UIFrame_t ** units = alloca(num_units * sizeof(UIFrame_t *));
+    UIFrame_t ** units = alloca(num_units * sizeof(UIFrame_t *));
 
-    // /* Create all the units */
-    // for (int u = 0; u < num_units; ++u)
-    // {
-    //     UIFrame_t * unit = new_UIFrame(UIDivType(), "unit");
-    //     UIDivSetBackgroundColour(unit, UIMakeColour(0.3,0.3,0.3,1.0));
-    //     UIDivSetBorderColour(unit, UIMakeColour(0.6,0.6,0.6,1.0));
-    //     UIDivSetBorderThickness(unit, 1.0);
-    //     // UIFrameAddSubframe(main, unit);
-    //     units[u] = unit;
-    // }
+    /* Create all the units */
+    for (int u = 0; u < num_units; ++u)
+    {
+        UIFrame_t * unit = new_UIFrame(UIDivType(), "unit");
+        UIDivSetBackgroundColour(unit, UIMakeColour(0.3,0.3,0.3,1.0));
+        UIDivSetBorderColour(unit, UIMakeColour(0.9,0.6,0.3,1.0));
+        UIDivSetBorderThickness(unit, 1.0);
+        UIFrameSetXCoordinateRelative(unit, 0, 0);
+        UIFrameSetYCoordinateAbsolute(unit, NodeUnitHeight*u, NodeUnitHeight, 1);
+        // UIFrameAddSubframe(main, unit);
+        units[u] = unit;
+    }
 
-    // /* Part 2 */
+    /* Part 2 */
 
-    // /* Add outputs */
-    // for (int o = 0; o < Spec->NumOutputs; ++o)
-    // {
-    //     UIFrame_t * label = new_UIFrame(UILabelType(), "label");
-    //     UIFrameSetXCoordinateRelative(label, 2, 2);
-    //     UIFrameSetYCoordinateRelative(label, 2, 2);
-    //     UILabelSetText(label, Spec->OutputNames[o]);
-    //     UIFrameAddSubframe(units)
-    // }
+    /* Add outputs */
+    for (int o = 0; o < Spec->NumOutputs; ++o)
+    {
+        UIFrame_t * label = new_UIFrame(UILabelType(), "label");
+        UILabelSetTextColour(label, UIMakeColour(0.8,0.8,0.8,1.0));
+        UIFrameSetXCoordinateRelative(label, 2, 2);
+        UIFrameSetYCoordinateRelative(label, 2, 2);
+        UILabelSetText(label, Spec->OutputNames[o]);
+        UIFrameAddSubframe(units[o], label);
+    }
 
-    // /* Add parameters */
-    // for (int p = 0; p < Spec->NumParameters; ++p)
-    // {
-    //     UIFrame_t * label = new_UIFrame(UILabelType(), "label");
-    //     UIFrameSetXCoordinateRelative(label, 2, 2);
-    //     UIFrameSetYCoordinateRelative(label, 2, 2);
-    //     UILabelSetText(label, Spec->Parameters[p].Name);
-    // }
+    /* Add parameters */
+    for (int p = 0; p < Spec->NumParameters; ++p)
+    {
+        UIFrame_t * label = new_UIFrame(UILabelType(), "label");
+        UILabelSetTextColour(label, UIMakeColour(0.8,0.8,0.8,1.0));
+        UIFrameSetXCoordinateRelative(label, 2, 2);
+        UIFrameSetYCoordinateRelative(label, 2, 2);
+        UILabelSetText(label, Spec->Parameters[p].Name);
+        UIFrameAddSubframe(units[Spec->NumOutputs+p], label);
+    }
 
-    // /* Add outputs */
+    /* Add outputs */
 
     return main;
 }
@@ -207,9 +216,9 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
     int w = ToInteger(Rect.X*ScaleFactor, int);
     int h = ToInteger(Rect.Y*ScaleFactor, int);
 
-    UIColour_t draw_colour = UIMakeColour(0.2,0.2,0.2,1.0);
+    UIColour_t draw_colour = UIMakeColour(0.18,0.18,0.18,1.0);
 
-    // UIImageDrawRect(Image, x, y, w, h, draw_colour);
+    UIImageDrawRect(Image, x, y, w, h, draw_colour);
 
     UIColour_t border_colour = UIMakeColour(0.3,0.7,0.96,1.0);
     double border_size = 3*ScaleFactor;
@@ -232,7 +241,7 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
     UIImageDrawRect(Image, x, sides_y, border_pix, sides_h, border_colour);
 
     /* Draw all the nodes */
-    for (int n = 0; n < data->num_nodes-3; ++n)
+    for (int n = 0; n < data->num_nodes; ++n)
     {
         NodeEditor_node_t * node = data->nodes[n];
 
@@ -255,18 +264,18 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         puts("Drawn!!!");
 
         /* Put it on the main image */
-        // UIImageOverlayImage( Image,
-        //                      node->image,
-        //                      ToInteger(node->location.X*node_sf, int),
-        //                      ToInteger(node->location.Y*node_sf, int),
-        //                      1.0 );
+        UIImageOverlayImage( Image,
+                             node->image,
+                             ToInteger(node->location.X*node_sf, int),
+                             ToInteger(node->location.Y*node_sf, int),
+                             1.0 );
 
-        UIImageDrawRect( Image,
-                         ToInteger(node->location.X*node_sf, int),
-                         ToInteger(node->location.Y*node_sf, int),
-                         ToInteger(node->dimensions.X*node_sf, int),
-                         ToInteger(node->dimensions.Y*node_sf, int),
-                         UIMakeColour(1.0,0.5,0.5,1.0));
+        // UIImageDrawRect( Image,
+        //                  ToInteger(node->location.X*node_sf, int),
+        //                  ToInteger(node->location.Y*node_sf, int),
+        //                  ToInteger(node->dimensions.X*node_sf, int),
+        //                  ToInteger(node->dimensions.Y*node_sf, int),
+        //                  UIMakeColour(1.0,0.5,0.5,1.0));
     }
 }
 
