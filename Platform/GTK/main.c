@@ -1,8 +1,6 @@
-/*****************************************************************************
- * DashGL.com GTK GL-Area                                                    *
- * This file is in the public domain                                         *
- * Contributors: Benjamin Collins                                            *
- *****************************************************************************/
+/*
+ * Ths is the main file which is a mess right now but its not that important
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,7 +70,7 @@ int X, Y;
 
 
 PGGraph_t * graph;
-UICoordinate_t positions[] = {UIMakeCoordinate(23,300), UIMakeCoordinate(300,300), UIMakeCoordinate(550,300), UIMakeCoordinate(880,300)};
+UICoordinate_t positions[] = {UIMakeCoordinate(23,264), UIMakeCoordinate(300,310), UIMakeCoordinate(550,290), UIMakeCoordinate(830,290), UIMakeCoordinate(1090,310)};
 
 #include "BuildInterface.c"
 #include "GraphTest.c"
@@ -237,7 +235,7 @@ void motion_notify_event(GtkWidget * widget, GdkEventMotion * event)
 
     mouse_y = gdk_window_get_height(event->window) - mouse_y - 1;
 
-    printf("mouse %i, %i\n", mouse_x, mouse_y);
+    // printf("mouse %i, %i\n", mouse_x, mouse_y);
 
     UIFrameSetMouseLocation(mainDiv, mouse_x/scalefac, mouse_y/scalefac, UIFrameGetRect(mainDiv,UIMakeRect(0,0)));
 

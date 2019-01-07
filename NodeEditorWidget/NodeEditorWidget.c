@@ -3,30 +3,10 @@
 #include <string.h>
 
 #include "NodeEditorWidget.h"
-
-#define NodeTitleBarHeight 30
-#define NodeUnitHeight 50
+#include "NENode.h"
 
 #define MIN(A, B) ((A) < (B)) ? (A) : (B)
 #define MAX(A, B) ((A) > (B)) ? (A) : (B)
-
-/* Each node's view for the user is represented by one of these */
-typedef struct {
-
-    /* It's position in the graph (of top left point) */
-    UICoordinate_t location;
-    UIRect_t dimensions;
-
-    /* The node is like a window */
-    UIImage_t * image; /* Stored in here to not redraw all the time */
-    double zoom, scale_fac; /* The zoom and scale fac of last drawn buffer */
-    UIFrame_t * interface; /* The node interface structure */
-
-    /* The node */
-    PGNode_t * node;
-
-} NodeEditor_node_t;
-
 
 /* The node editor main data */
 typedef struct {
@@ -36,7 +16,7 @@ typedef struct {
 
     /* Node interface */
     int num_nodes;
-    NodeEditor_node_t ** nodes;
+    NENode_t ** nodes;
 
     /* How zoomed in the view is */
     double zoom;
@@ -45,66 +25,6 @@ typedef struct {
 
 /***************************** NodeEditor methods *****************************/
 
-/* Create UIFrame interface for a node type */
-UIFrame_t * NE_create_interface_for_node(PGNodeSpec_t * Spec)
-{
-    int num_units = Spec->NumInputs + Spec->NumParameters + Spec->NumOutputs;
-
-    UIFrame_t * main = new_UIFrame(UIDivType(), "Node");
-    UIFrameSetXCoordinateAbsolute(main, 0, 0, 0);
-    UIFrameSetYCoordinateAbsolute(main, 0, NodeUnitHeight*num_units+20, 0);
-
-    UIDivSetBackgroundColour(main, UIMakeColour(0.1,0.1,0.1,1.0));
-
-    UIFrame_t ** units = alloca(num_units * sizeof(UIFrame_t *));
-
-    /* Create all the units */
-    for (int u = 0; u < num_units; ++u)
-    {
-        UIFrame_t * unit = new_UIFrame(UIDivType(), "unit");
-        UIDivSetBackgroundColour(unit, UIMakeColour(0.3,0.3,0.3,1.0));
-        UIDivSetBorderColour(unit, UIMakeColour(0.9,0.6,0.3,1.0));
-        UIDivSetBorderThickness(unit, 1.0);
-        UIFrameSetXCoordinateRelative(unit, 0, 0);
-        UIFrameSetYCoordinateAbsolute(unit, NodeUnitHeight*u, NodeUnitHeight, 1);
-        // UIFrameAddSubframe(main, unit);
-        units[u] = unit;
-    }
-
-    /* Part 2 */
-
-    /* Add outputs */
-    for (int o = 0; o < Spec->NumOutputs; ++o)
-    {
-        UIFrame_t * label = new_UIFrame(UILabelType(), "label");
-        UILabelSetTextColour(label, UIMakeColour(0.8,0.8,0.8,1.0));
-        UIFrameSetXCoordinateRelative(label, 2, 2);
-        UIFrameSetYCoordinateRelative(label, 2, 2);
-        UILabelSetText(label, Spec->OutputNames[o]);
-        UIFrameAddSubframe(units[o], label);
-    }
-
-    /* Add parameters */
-    for (int p = 0; p < Spec->NumParameters; ++p)
-    {
-        UIFrame_t * label = new_UIFrame(UILabelType(), "label");
-        UILabelSetTextColour(label, UIMakeColour(0.8,0.8,0.8,1.0));
-        UIFrameSetXCoordinateRelative(label, 2, 2);
-        UIFrameSetYCoordinateRelative(label, 2, 2);
-        UILabelSetText(label, Spec->Parameters[p].Name);
-        UIFrameAddSubframe(units[Spec->NumOutputs+p], label);
-    }
-
-    /* Add outputs */
-
-    return main;
-}
-
-/* inverse of previous lol */
-void NE_delete_node_interface(UIFrame_t * Interface)
-{
-    free(Interface);
-}
 
 void NodeEditorSetGraph( UIFrame_t * NodeEditor,
                          PGGraph_t * Graph,
@@ -129,37 +49,11 @@ void NodeEditorSetGraph( UIFrame_t * NodeEditor,
         int num_nodes = PGGraphGetNumNodes(Graph);
 
         data->num_nodes = num_nodes;
-        data->nodes = malloc(num_nodes * sizeof(NodeEditor_node_t *));
+        data->nodes = malloc(num_nodes * sizeof(NENode_t *));
 
         for (int n = 0; n < num_nodes; ++n)
         {
-            data->nodes[n] = malloc(sizeof(NodeEditor_node_t));
-        }
-
-        /* Set each node's view dimensions and create interface */
-        for (int n = 0; n < num_nodes; ++n)
-        {
-            /* Node height is (number of parameters + number of inputs) x 50 */
-            PGNode_t * node = PGGraphGetNode(Graph, n);
-
-            /* On the left (inputs) */
-            int num_parameters = PGNodeGetSpec(node)->NumParameters;
-            int num_inputs = PGNodeGetNumInputs(node);
-
-            /* On the right (outputs) */
-            int num_outputs = PGNodeGetNumOutputs(node);
-
-            NodeEditor_node_t * view_node = data->nodes[n];
-
-            /* How many units high the node is */
-            int num_units = num_inputs + num_parameters + num_outputs;
-            view_node->dimensions = UIMakeRect(200, num_units*NodeUnitHeight+NodeTitleBarHeight);
-
-            /* Create image */
-            view_node->interface = NE_create_interface_for_node(PGNodeGetSpec(node));
-            view_node->image = new_UIImage(10,10,Pixels_RGB_24i);
-            view_node->scale_fac = -1;
-            view_node->zoom = -1;
+            data->nodes[n] = new_NENode(PGGraphGetNode(Graph, n));
         }
 
         /* Now set locations */
@@ -167,7 +61,7 @@ void NodeEditorSetGraph( UIFrame_t * NodeEditor,
         {
             for (int n = 0; n < num_nodes; ++n)
             {
-                NodeEditor_node_t * node = data->nodes[n];
+                NENode_t * node = data->nodes[n];
                 node->location = NodePositions[n];
             }
         }
@@ -243,7 +137,7 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
     /* Draw all the nodes */
     for (int n = 0; n < data->num_nodes; ++n)
     {
-        NodeEditor_node_t * node = data->nodes[n];
+        NENode_t * node = data->nodes[n];
 
         double node_sf = ScaleFactor * data->zoom;
 
@@ -261,7 +155,6 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         /* Now node is drawn */
         UIFrameDraw( node->interface, node->image, node_sf,
                      UIMakeCoordinate(0,0), node->dimensions, 1);
-        puts("Drawn!!!");
 
         /* Put it on the main image */
         UIImageOverlayImage( Image,

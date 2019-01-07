@@ -5,7 +5,7 @@ mkdir buildoutput
 mkdir buildoutput/objects
 
 ############################## Compile all objects #############################
-compilefiles=(NodeEditorWidget.c)
+compilefiles=(NodeEditorWidget.c NENode.c)
 
 #compile each file
 cd buildoutput/objects

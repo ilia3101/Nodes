@@ -133,7 +133,7 @@ do
 	cd ../../$library > /dev/null
 	touch .output
 	# Each library has its own build script whcih outputs to a buildoutput folder
-	./build.sh $compiler $compilerflags &> .output
+	./build.sh $compiler $compilerflags #&> .output
 	if [ $? -eq 0 ]; then
 		if [[ "$OSTYPE" == "linux-gnu" ]]; then
 			ftime=$(echo "scale=0; ($(date +%s.%N)-$startfile)*10000.0/10.0" |bc -l)
