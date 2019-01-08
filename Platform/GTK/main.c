@@ -63,14 +63,14 @@ UIFrame_t * mainDiv;
 
 UIImage_t * MainPic = NULL;
 
-double scalefac = /* 0.75 */1;
+double scalefac = /* 0.75 */0.67;
 
 int fghjkl = 0;
 int X, Y;
 
 
 PGGraph_t * graph;
-UICoordinate_t positions[] = {UIMakeCoordinate(23,264), UIMakeCoordinate(300,310), UIMakeCoordinate(550,290), UIMakeCoordinate(830,290), UIMakeCoordinate(1090,310)};
+UICoordinate_t positions[] = {UIMakeCoordinate(23,234), UIMakeCoordinate(300,310), UIMakeCoordinate(550,290), UIMakeCoordinate(830,290), UIMakeCoordinate(1090,310)};
 
 #include "BuildInterface.c"
 #include "GraphTest.c"
@@ -127,7 +127,6 @@ int main(int argc, char *argv[])
 
 
 	int status, milo = 0;
-    puts("HIHIHI");
 
 	GtkApplication * app = gtk_application_new("com.Ilia.Nodes", G_APPLICATION_FLAGS_NONE);
 	g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);

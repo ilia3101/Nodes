@@ -25,6 +25,22 @@ typedef struct {
 
 /***************************** NodeEditor methods *****************************/
 
+void NE_draw_node_connection( UIImage_t * Image,
+                              int X1, int Y1,
+                              int X2, int Y2,
+                              double thickness,
+                              UIColour_t Colour )
+{
+    int radius = (int)(thickness/2.0+0.5);
+    int left_x = MIN(X1, X2)-radius, right_x = MAX(X1, X2)+radius;
+    int bottom_y = MIN(Y1, Y2)-radius, top_y = MAX(Y1, Y2)+radius;
+    int len = (int)((X2-X1)/2.0+0.5); /* Half length */
+    // UIImageDrawRect(Image, X1-radius, Y1-radius, len+radius*2, radius*2, Colour);
+    // UIImageDrawRect(Image, X2-radius*2-len, Y2-radius, X2-X1+radius*2, radius*2, Colour);
+    // UIImageDrawRect(Image, X1+len-radius, Y1-radius, radius*2, (Y2-Y1)+radius*2, Colour);
+    return;
+}
+
 
 void NodeEditorSetGraph( UIFrame_t * NodeEditor,
                          PGGraph_t * Graph,
@@ -162,6 +178,25 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
                              ToInteger(node->location.X*node_sf, int),
                              ToInteger(node->location.Y*node_sf, int),
                              1.0 );
+
+        /* Get the actual node in the graph and find where it's connected to
+         * to draw those connections */
+        PGNode_t * actual_node = NENodeGetPGNode(node);
+
+        // for (int o = 0; o < PGNodeGetNumOutputs(actual_node); ++o)
+        {
+            // int num_connections = PGNodeGetNumNodesAtOutput(actual_node, o);
+
+            // for (int c = 0; c < 3; ++c)
+            // {
+            //     NE_draw_node_connection( Image,ToInteger(node->location.X*node_sf, int),
+            //                              ToInteger(node->location.Y*node_sf, int),
+            //                              ToInteger(node->location.X*node_sf, int)+140,
+            //                              ToInteger(node->location.Y*node_sf, int)+100,
+            //                              3, UIMakeColour(0.95,0.82,0.2,1.0) );
+            // }
+        }
+
 
         // UIImageDrawRect( Image,
         //                  ToInteger(node->location.X*node_sf, int),
