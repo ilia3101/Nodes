@@ -63,7 +63,7 @@ UIFrame_t * mainDiv;
 
 UIImage_t * MainPic = NULL;
 
-double scalefac = /* 0.75 */0.67;
+double scalefac = /* 0.75 */0.78;
 
 int fghjkl = 0;
 int X, Y;
