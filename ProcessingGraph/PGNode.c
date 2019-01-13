@@ -30,17 +30,13 @@ PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph)
     node->spec = Spec;
     node->input_nodes = MBZeroAlloc(mb, Spec->NumInputs * sizeof(PGNode_t *));
     for (int i = 0; i < Spec->NumInputs; ++i) node->input_nodes[i] == NULL;
-    if (Spec->NumInputs)
-        if (node->input_nodes[0] != NULL) printf("%s NOT NULL, has %i inputs\n", Spec->Name, Spec->NumInputs);
-    // if (node->input_nodes == NULL) puts("malloc failes");
-    node->input_node_output_indexes=MBZeroAlloc(mb,Spec->NumInputs*sizeof(int));
+    node->input_node_output_indexes = MBZeroAlloc(mb,Spec->NumInputs*sizeof(int));
     node->output_nodes = MBMalloc(mb, Spec->NumOutputs * sizeof(PGNode_t **));
     for (int i = 0; i < Spec->NumOutputs; ++i)
         node->output_nodes[i] = MBZeroAlloc(mb, sizeof(PGNode_t *));
     node->output_node_counts = MBZeroAlloc(mb, sizeof(int) * Spec->NumOutputs);
     node->outputs = MBZeroAlloc(mb, sizeof(PGNodeOutput_t) * Spec->NumOutputs);
-    node->parameter_states = MBZeroAlloc(mb,
-                            Spec->NumParameters*sizeof(PGNodeParameterState_t));
+    node->parameter_states = MBZeroAlloc(mb, Spec->NumParameters * sizeof(PGNodeParameterState_t));
 
     /* Run the node class's init function */
     Spec->Init(node);
@@ -97,7 +93,9 @@ void PGNodeConnect( PGNode_t * Node,
     /* First, disconnect if connected */
     if (Node->input_nodes[NodeInputIndex] != NULL)
     {
-        printf("%s input %i not NULL: %p, disconnecting\n", PGNodeGetSpec(Node)->Name, NodeInputIndex, Node->input_nodes[NodeInputIndex]);
+        printf( "%s input %i not NULL: %p, disconnecting\n",
+                PGNodeGetSpec(Node)->Name, NodeInputIndex,
+                Node->input_nodes[NodeInputIndex] );
         PGNodeDisconnect( Node,
                           NodeInputIndex,
                           Node->input_nodes[NodeInputIndex],
@@ -239,8 +237,7 @@ void PGNodeSetTextParameter(PGNode_t * Node, int ParameterIndex, char * Text)
 
 void PGNodeSetFileParameter(PGNode_t * Node, int ParameterIndex, int FileID)
 {
-    PGNodeParameterState_t * param = &Node->parameter_states[ParameterIndex];
-    param->file_id = FileID;
+    Node->parameter_states[ParameterIndex].file_id = FileID;
 }
 
 float PGNodeGetValueParameterValue(PGNode_t * Node, int ParameterIndex)

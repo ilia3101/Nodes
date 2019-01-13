@@ -437,7 +437,7 @@ void write_json(JSONBlock_t * JSON, FILE * Out, int LevelsIn, int NewLineBracket
         break;
 
     case JSONNumber:
-        fprintf(Out, "%.7lg", JSONNumberGetValue(JSON));
+        fprintf(Out, "%.10lg", JSONNumberGetValue(JSON));
         break;
 
     case JSONString:

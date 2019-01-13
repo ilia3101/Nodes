@@ -47,7 +47,6 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context);
 GLuint program;
 GLuint vao, vbo_triangle, vbo_circle;
 GLint attribute_coord2d;
-GLuint tex;
 
 
 
@@ -63,14 +62,18 @@ UIFrame_t * mainDiv;
 
 UIImage_t * MainPic = NULL;
 
-double scalefac = /* 0.75 */0.78;
+double scalefac = /* 0.75 */0.67;
 
 int fghjkl = 0;
 int X, Y;
 
 
 PGGraph_t * graph;
-UICoordinate_t positions[] = {UIMakeCoordinate(23,234), UIMakeCoordinate(300,310), UIMakeCoordinate(550,290), UIMakeCoordinate(830,290), UIMakeCoordinate(1090,310)};
+UICoordinate_t positions[] = { UIMakeCoordinate(23,234),
+                               UIMakeCoordinate(290,310),
+                               UIMakeCoordinate(620,290),
+                               UIMakeCoordinate(905,290),
+                               UIMakeCoordinate(1200,310) };
 
 #include "BuildInterface.c"
 #include "GraphTest.c"
@@ -121,7 +124,7 @@ int main(int argc, char *argv[])
 
 
     // PicA = new_UIImage(width, height, Pixels_RGB_24i);
-    MainPic = new_UIImage(5000, 4000, Pixels_RGBA_64i);
+    MainPic = new_UIImage(200, 200, Pixels_RGBA_64i);
     // Draw(MainPic);
     // MainPic = PicB;
 
@@ -205,7 +208,7 @@ void button_press_event(GtkWidget * widget, GdkEventButton * event, gpointer use
         upordown = 1;
     else if (event->type == GDK_BUTTON_RELEASE)
         upordown = 0;
-    
+
     if (upordown == 1)
         puts("ButtonDown");
     else 
@@ -243,6 +246,13 @@ void motion_notify_event(GtkWidget * widget, GdkEventMotion * event)
 }
 
 
+/*
+ * The two textures used for the interface:
+ * textures[0] = Interface (nodes and stuff)
+ * textures[1] = Image
+ * 
+ * textures[0] is drawn over textures[1]
+ */
 GLuint textures[2];
 
 
@@ -261,14 +271,14 @@ const GLchar* vertexSource = R"glsl(
         gl_Position = vec4(position, 0.0, 1.0);
     }
 )glsl";
-/* This version only shows texKitten */
+/* This version only shows texInterface */
 /* Fragemtn shader that converts from XYZ to sRGB (or monitor space) */
 // const GLchar * fragmentSource = R"glsl(
 //     #version 150 core
 //     in vec3 Color;
 //     in vec2 Texcoord;
 //     out vec4 outColor;
-//     uniform sampler2D texKitten;
+//     uniform sampler2D texInterface;
 //     // uniform sampler2D texPuppy;
 //     void main()
 //     {
@@ -278,7 +288,7 @@ const GLchar* vertexSource = R"glsl(
 //             0.0556434, -0.2040259, 1.0572252
 //         );
 
-//         vec4 pixel = texture(texKitten, Texcoord);
+//         vec4 pixel = texture(texInterface, Texcoord);
 
 //         /* Colour = first 3 channels * colour matrix */
 //         vec3 Colour = pixel.rgb * ColourMatrix;
@@ -288,15 +298,32 @@ const GLchar* vertexSource = R"glsl(
 //         outColor = vec4(pow(Colour, vec3(1/2.2))*alpha, alpha);
 //     }
 // )glsl";
+// const GLchar* fragmentSource = R"glsl(
+//     #version 150 core
+//     in vec2 Texcoord;
+//     uniform sampler2D texInterface;
+//     // uniform sampler2D texImage;
+//     void main()
+//     {
+//         vec4 InterfacePixel = texture(texInterface, Texcoord);
+//         // vec4 ImagePixel = texture(texImage, Texcoord);
+//         gl_FragColor = InterfacePixel * InterfacePixel[3];
+//         // gl_FragColor = pixel;
+//     }
+// )glsl";
 const GLchar* fragmentSource = R"glsl(
     #version 150 core
     in vec2 Texcoord;
-    uniform sampler2D texKitten;
+    uniform sampler2D texInterface;
+    uniform sampler2D texImage;
     void main()
     {
-        vec4 pixel = texture(texKitten, Texcoord);
-        gl_FragColor = pixel * pixel[3];
-        // gl_FragColor = pixel;
+        vec4 Src = texture(texInterface, Texcoord);
+        vec4 Dst = texture(texImage, Texcoord);
+        float ialpha = 1.0 - Src[3];
+        /* Alpha blend interface over the image */
+        vec4 result = (Src*Src[3] + Dst*Dst[3]*ialpha) / (Src[3]+Dst[3]*ialpha);
+        gl_FragColor = result*result[3];
     }
 )glsl";
 
@@ -321,7 +348,7 @@ static void activate(GtkApplication *app, gpointer user_data)
 
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW (window), NAME);
-    gtk_window_set_default_size (GTK_WINDOW (window), 530, 320);
+    gtk_window_set_default_size (GTK_WINDOW (window), 1390, 500);
 #ifdef UseTransparentWindow
     gtk_window_set_titlebar(GTK_WINDOW(window), header_bar);
 #endif
@@ -338,11 +365,6 @@ static void activate(GtkApplication *app, gpointer user_data)
 
 
         /* COLORCOLOR COLOUR */
-
-
-
-
-
 
 
 
@@ -528,34 +550,45 @@ static void on_realize(GtkGLArea *area)
     int width, height;
     unsigned char * image;
 
+
+
+
+    /*************************** make texInterface ****************************/
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
-        float pixels[] = {
-            0.0f, 1.0f, 0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f,    0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,   0.6f, 0.2f, 0.2f, 0.6f,    0.1f, 0.5f, 0.8f, 0.9f,
-            1.0f, 0.5f, 0.0f, 1.0f,   0.0f, 0.0f, 0.0f, 0.0f,    0.0f, 0.0f, 0.0f, 0.0f
-        };
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels2);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+    float pixels[] = {
+        0.0f, 1.0f, 0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f,    0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,   0.6f, 0.2f, 0.2f, 0.6f,    0.1f, 0.5f, 0.8f, 0.9f,
+        1.0f, 0.5f, 0.0f, 1.0f,   0.0f, 0.0f, 0.0f, 0.0f,    0.0f, 0.0f, 0.0f, 0.0f
+    };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels2);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texInterface"), 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+
+
+
+    /***************************** make texImage ******************************/
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textures[1]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGBA, GL_FLOAT, pixels);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 3, 3, 0, GL_RGBA, GL_FLOAT, pixels);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texImage"), 1);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
 
     char * renderer = (char *) glGetString (GL_RENDERER);
     printf("OpenGL renderer: %s\n", renderer);
