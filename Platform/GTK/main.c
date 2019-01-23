@@ -50,9 +50,6 @@ GLint attribute_coord2d;
 
 
 
-
-
-
 int MainWindowWidth = 600;
 int MainWindowHeight = 600;
 
@@ -66,6 +63,14 @@ double scalefac = /* 0.75 */0.67;
 
 int fghjkl = 0;
 int X, Y;
+
+
+/* Graph Image outputted to here */
+int ImageWidth = 3;
+int ImageHeight = 3;
+float * ImageData = NULL;
+int ImageHasChanged = 0;
+
 
 
 PGGraph_t * graph;
@@ -84,7 +89,7 @@ GTimer * Timer;
 
 int main(int argc, char *argv[])
 {
-    graph = GraphTest("/home/ilia/ProcessingGraphApp/test/5D2.CR2");
+    graph = GraphTest("/home/ilia/ProcessingGraphApp/test/DSC01263.ARW");
 
     Timer = g_timer_new();
     g_timer_start (Timer);
@@ -99,12 +104,13 @@ int main(int argc, char *argv[])
 
     mainDiv = new_AppWindow();
 
-    UIImage_t * pic = new_UIImage(width*scalefac+0.5, height*scalefac+0.5, Pixels_RGB_48i);
+    UIImage_t * pic = new_UIImage(width*scalefac+0.5, height*scalefac+0.5, Pixels_RGB_24i);
 
 
     int times = 4;
     clock_t start = clock();
 
+    puts("About to draw a few times");
     for (int i = 0; i < times; i++)
     {
         UIFrameDraw( mainDiv,
@@ -114,17 +120,20 @@ int main(int argc, char *argv[])
                      UIMakeRect(width,height),
                      1 );
     }
+    puts("Drawn");
 
     clock_t end = clock();
     double Time = (((double)(end - start) / CLOCKS_PER_SEC)*1000.0) / times;
     printf("\n\nDrawing took %.3fms.\n\n\n", Time);
 
-    writebmp(pic->Data,pic->Width,pic->Height, "test.BMP");
+    // writebmp(pic->Data,pic->Width,pic->Height, "test.BMP");
     // Preview("test.BMP");
 
 
     // PicA = new_UIImage(width, height, Pixels_RGB_24i);
+    puts("Hello A");
     MainPic = new_UIImage(200, 200, Pixels_RGBA_64i);
+    puts("Hello B");
     // Draw(MainPic);
     // MainPic = PicB;
 
@@ -258,18 +267,18 @@ GLuint textures[2];
 
 // Shader sources
 const GLchar* vertexSource = R"glsl(
-    #version 150 core
-    in vec2 position;
-    in vec3 color;
-    in vec2 texcoord;
-    out vec3 Color;
-    out vec2 Texcoord;
-    void main()
-    {
-        Color = color;
-        Texcoord = texcoord;
-        gl_Position = vec4(position, 0.0, 1.0);
-    }
+#version 150 core
+in vec2 position;
+in vec3 color;
+in vec2 texcoord;
+out vec3 Color;
+out vec2 Texcoord;
+void main()
+{
+    Color = color;
+    Texcoord = texcoord;
+    gl_Position = vec4(position, 0.0, 1.0);
+}
 )glsl";
 /* This version only shows texInterface */
 /* Fragemtn shader that converts from XYZ to sRGB (or monitor space) */
@@ -312,19 +321,22 @@ const GLchar* vertexSource = R"glsl(
 //     }
 // )glsl";
 const GLchar* fragmentSource = R"glsl(
-    #version 150 core
-    in vec2 Texcoord;
-    uniform sampler2D texInterface;
-    uniform sampler2D texImage;
-    void main()
-    {
-        vec4 Src = texture(texInterface, Texcoord);
-        vec4 Dst = texture(texImage, Texcoord);
-        float ialpha = 1.0 - Src[3];
-        /* Alpha blend interface over the image */
-        vec4 result = (Src*Src[3] + Dst*Dst[3]*ialpha) / (Src[3]+Dst[3]*ialpha);
-        gl_FragColor = result*result[3];
-    }
+#version 150 core
+
+in vec2 Texcoord;
+uniform sampler2D texInterface;
+uniform sampler2D texImage;
+
+void main()
+{
+    vec4 Src = texture(texInterface, Texcoord);
+    vec4 Dst = texture(texImage, Texcoord);
+    float ialpha = 1.0 - Src[3];
+    /* Alpha blend interface over the image */
+    vec4 result = (Src*Src[3] + Dst*Dst[3]*ialpha) / (Src[3]+Dst[3]*ialpha);
+    gl_FragColor = (result*result[3]);
+}
+
 )glsl";
 
 // #define UseTransparentWindow
@@ -599,6 +611,10 @@ static void on_realize(GtkGLArea *area)
 static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
 {
 	g_print("on_render\n");
+    
+    // glEnable(GL_DITHER);
+    glShadeModel(GL_SMOOTH);
+    glDisable(GL_DITHER);
 
 
     // set texture's sizes
@@ -652,12 +668,14 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
         int cleared = 0;
         if (resize) cleared = 1;
 
+        puts("drawing interface");
         UIFrameDraw( mainDiv,
                      DrawPic,
                      draw_scale_fac,
                      UIMakeCoordinate(0,0),
                      UIMakeRect(MainWindowWidth/draw_scale_fac,MainWindowHeight/draw_scale_fac),
                      cleared );
+        puts("drawn");
     }
     diff = clock() - start;
     double UIFrameDraw_time = ((double)diff) * (1000.0 / CLOCKS_PER_SEC);
@@ -679,6 +697,16 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
     }
     diff = clock() - start;
     double texfunc_time = ((double)diff) * (1000.0 / CLOCKS_PER_SEC);
+    
+
+    /* If the graph output image has been updated, upload it as texture */
+    if (ImageHasChanged && ImageData != NULL)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textures[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, ImageWidth, ImageHeight,
+                     0, GL_RGBA, GL_FLOAT, ImageData);
+    }
 
 
     start = clock();

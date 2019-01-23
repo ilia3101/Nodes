@@ -221,6 +221,8 @@ PGGraph_t * GraphTest(char * File)
     delete_PGImage(test);
     delete_PGGraph(graph);
 
+    puts("GraphTest complete.");
+
     // delete_PGGraph(graph_made_from_json);
     return graph_made_from_json;
 

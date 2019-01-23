@@ -12,10 +12,6 @@ double randoMm()
 
 int num12121212 = 0;
 
-void button_user_func(UIFrame_t * Button)
-{
-    printf("\n\n\n\n\n\n\n\n\n\nBUTTON pressed: %s\n\n\n\n\n\n\n\n\n\n\n\n\n\n", UIFrameGetID(Button));
-}
 
 typedef struct {
     UIFrame_t * main_div;
@@ -28,6 +24,7 @@ UIFrame_t * new_AppWindow()
 
     UIDivSetBackgroundColour(main_div, UIMakeColour(0.0, 0.0, 0.0, 0.0));
     // UIDivSetBackgroundColour(main_div, UIMakeColour(0.1, 0.3, 0.4, 1.0));
+    UIDivSetBorderThickness(main_div, 2);
 
     UIFrame_t * node_graph_widget = new_UIFrame(NodeEditorWidgetType(), "node_editor");
 

@@ -159,6 +159,8 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
 
     UIColour_t draw_colour = UIMakeColour(0.18,0.18,0.18,1.0);
 
+    // return;
+
     // UIImageDrawRect(Image, x, y, w, h, draw_colour);
 
     // UIColour_t border_colour = UIMakeColour(0.3,0.7,0.96,1.0);
@@ -237,6 +239,8 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         }
     }
 }
+
+// void Nodeeditor_Mouse
 
 UIFrameType_t NodeEditor_type = {
     .Init = NodeEditor_Init,
