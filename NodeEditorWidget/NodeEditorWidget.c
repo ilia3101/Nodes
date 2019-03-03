@@ -1,3 +1,4 @@
+/* worst code needs */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +21,21 @@ typedef struct {
 
     /* How zoomed in the view is */
     double zoom;
+    /* Where the view is right now */
+    double view_loc_x;
+    double view_loc_y;
+
+    /* Where view was when mouse first went down */
+    double view_loc_x_mouse;
+    double view_loc_y_mouse;
+
+    /* mouse stuff */
+    int mouse_is_down;
+    /* Where mouse originally went down */
+    double mouse_down_x;
+    double mouse_down_y;
+    /* Which node it went down on */
+    NENode_t * mouse_down_node;
 
 } NodeEditor_data_t;
 
@@ -134,6 +150,8 @@ void NodeEditor_Init(UIFrame_t * NodeEditor)
     data->nodes = NULL;
     data->num_nodes = 0;
     data->zoom = 1.0;
+    data->view_loc_x = 0;
+    data->view_loc_y = 0;
     return;
 }
 
@@ -159,36 +177,13 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
 
     UIColour_t draw_colour = UIMakeColour(0.18,0.18,0.18,1.0);
 
-    // return;
-
-    // UIImageDrawRect(Image, x, y, w, h, draw_colour);
-
-    // UIColour_t border_colour = UIMakeColour(0.3,0.7,0.96,1.0);
-    // double border_size = 3*ScaleFactor;
-    // if (border_size < 1.0)
-    //     border_colour.Alpha *= border_size;
-    // int border_pix = ToInteger(border_size, int);
-
-    // /* bottom */
-    // UIImageDrawRect(Image, x, y, w, border_pix, border_colour);
-    // /* top */
-    // UIImageDrawRect(Image, x, y+h-border_pix, w, border_pix, border_colour);
-
-    // /* Cut off areas already covered by top and bottom */
-    // int sides_h = h - 2*border_pix;
-    // int sides_y = y + border_pix;
-
-    // /* right */
-    // UIImageDrawRect(Image, x+w-border_pix, sides_y, border_pix, sides_h, border_colour);
-    // /* left */
-    // UIImageDrawRect(Image, x, sides_y, border_pix, sides_h, border_colour);
-
     /* Draw all the nodes */
     for (int n = 0; n < data->num_nodes; ++n)
     {
         NENode_t * node = data->nodes[n];
 
         double node_sf = ScaleFactor * data->zoom;
+        // node_sf = 1;
 
         /* If it was previously drawn with a different scale or zoom factor,
          * the buffer needs to be changed in size */
@@ -208,8 +203,8 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         /* Put it on the main image */
         UIImageOverlayImage( Image,
                              node->image,
-                             ToInteger(node->location.X*node_sf, int),
-                             ToInteger(node->location.Y*node_sf, int),
+                             ToInteger(node->location.X*node_sf+data->view_loc_x, int),
+                             ToInteger(node->location.Y*node_sf+data->view_loc_y, int),
                              1.0 );
 
         /* Get the actual node in the graph and find where it's connected to
@@ -219,33 +214,115 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         for (int i = 0; i < PGNodeGetNumInputs(actual_node); ++i)
         {
             UICoordinate_t inloc = NENodeGetInputLocation(node, i);
-            int in_x = ToInteger((inloc.X+node->location.X)*node_sf, int);
-            int in_y = ToInteger((inloc.Y+node->location.Y)*node_sf, int);
+            int in_x = ToInteger((inloc.X+node->location.X)*node_sf+data->view_loc_x, int);
+            int in_y = ToInteger((inloc.Y+node->location.Y)*node_sf+data->view_loc_y, int);
 
             PGNode_t * input_node = PGNodeGetInputNode(actual_node, i);
 
             NENode_t * connect_node = NodeEditor_get_node_for_PGNode(NodeEditor, input_node);
             UICoordinate_t outloc = NENodeGetOutputLocation(connect_node, 0);
-            int out_x = ToInteger((outloc.X+connect_node->location.X)*node_sf, int);
-            int out_y = ToInteger((outloc.Y+connect_node->location.Y)*node_sf, int);
+            int out_x = ToInteger((outloc.X+connect_node->location.X)*node_sf+data->view_loc_x, int);
+            int out_y = ToInteger((outloc.Y+connect_node->location.Y)*node_sf+data->view_loc_y, int);
 
-            puts("hi");
-
-            NE_draw_node_connection( Image, in_x,
-                                        in_y,
-                                        out_x,
-                                        out_y,
-                                        3, UIMakeColour(0.95,0.82,0.2,1.0) );
+            NE_draw_node_connection( Image, in_x, in_y, out_x, out_y,
+                                     3, UIMakeColour(0.95,0.82,0.2,1.0) );
         }
     }
 }
 
-// void Nodeeditor_Mouse
+void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
+                             int MouseButton, /* MouseButton 1=Primary, 2=Middle, 3=Secondary */
+                             int UpOrDown, /* Up or Down 0=Up, 1=Down */
+                             double X, double Y,
+                             UIRect_t Rect )
+{
+    NodeEditor_data_t * data = UIFrameGetData(NodeEditor);
+
+    data->mouse_is_down = UpOrDown;
+
+    if (UpOrDown == 1)
+    {
+        data->mouse_down_x = X;
+        data->mouse_down_y = Y;
+        data->mouse_down_node = NULL;
+
+        /* Check if it is down on any nodes */
+        for (int n = 0; n < data->num_nodes; ++n)
+        {
+            NENode_t * node = data->nodes[n];
+            UIRect_t rect = node->dimensions;
+            UICoordinate_t loc = node->location;
+
+            /* If it goes down on the node */
+            if (X > loc.X+data->view_loc_x && X < loc.X+rect.X+data->view_loc_x
+                && Y > loc.Y+data->view_loc_y && Y < loc.Y+rect.Y+data->view_loc_y)
+            {
+                data->mouse_down_node = node;
+                UIFrameMouseButton(node->interface, MouseButton, UpOrDown,
+                    X-loc.X-data->view_loc_x, Y-loc.Y-data->view_loc_y, rect);
+                if (UIFrameGetNeedsRedraw(node->interface)) UIFrameSetNeedsRedraw(NodeEditor);
+                break;
+            }
+        }
+
+        /* If the mouse did not land on a node, save current location */
+        if (data->mouse_down_node == NULL)
+        {
+            data->view_loc_x_mouse = data->view_loc_x;
+            data->view_loc_y_mouse = data->view_loc_y;
+            return;
+        }
+    }
+    else if (UpOrDown == 0)
+    {
+        if (data->mouse_down_node != NULL)
+        {
+            UIFrameMouseButton( data->mouse_down_node->interface,
+                                MouseButton, UpOrDown,
+                                X-data->mouse_down_node->location.X-data->view_loc_x,
+                                Y-data->mouse_down_node->location.Y-data->view_loc_y,
+                                data->mouse_down_node->dimensions );
+            if (UIFrameGetNeedsRedraw(data->mouse_down_node->interface))
+                UIFrameSetNeedsRedraw(NodeEditor);
+        }
+    }
+}
+
+
+void NodeEditor_MouseLocation(UIFrame_t * NodeEditor, double X, double Y, UIRect_t Rect)
+{
+    NodeEditor_data_t * data = UIFrameGetData(NodeEditor);
+
+    /* If the mouse is down and did not land on a node, move */
+    if (data->mouse_is_down && data->mouse_down_node == NULL)
+    {
+        /* TODO: add scaling */
+        data->view_loc_x = data->view_loc_x_mouse + (X-data->mouse_down_x);
+        data->view_loc_y = data->view_loc_y_mouse + (Y-data->mouse_down_y);
+        UIFrameSetNeedsRedraw(NodeEditor);
+        return;
+    }
+    /* Or if it is on a node */
+    else if (data->mouse_is_down && data->mouse_down_node != NULL)
+    {
+        UIFrameSetNeedsRedraw(NodeEditor);
+        UIFrameSetMouseLocation( data->mouse_down_node->interface,
+                                 X-data->mouse_down_node->location.X-data->view_loc_x,
+                                 Y-data->mouse_down_node->location.Y-data->view_loc_y,
+                                 data->mouse_down_node->dimensions );
+
+        // if (UIFrameGetNeedsRedraw(data->mouse_down_node->interface))
+        UIFrameSetNeedsRedraw(NodeEditor);
+    }
+}
+
 
 UIFrameType_t NodeEditor_type = {
     .Init = NodeEditor_Init,
     .UnInit = NodeEditor_UnInit,
     .Draw = NodeEditor_Draw,
+    .MouseButton = NodeEditor_MouseButton,
+    .MouseLocation = NodeEditor_MouseLocation,
     .MemoryNeeded = NodeEditor_MemoryNeeded
 };
 

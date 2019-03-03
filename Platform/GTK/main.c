@@ -59,7 +59,7 @@ UIFrame_t * mainDiv;
 
 UIImage_t * MainPic = NULL;
 
-double scalefac = /* 0.75 */0.67;
+double scalefac = /* 0.75 */1.0;
 
 int fghjkl = 0;
 int X, Y;
@@ -736,9 +736,6 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
 }
 
 // rm a.out; gcc `pkg-config --cflags gtk+-3.0` main.c -lm -lGL -lGLEW -lGLU `pkg-config --libs gtk+-3.0`; ./a.out
-
-
-
 
 
 /*
