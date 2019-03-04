@@ -49,6 +49,7 @@ void NE_draw_node_connection( UIImage_t * Image,
                               UIColour_t Colour )
 {
     int radius = (int)(thickness/2.0+0.5);
+    if (radius < 1) radius = 1;
 
     if (X1 > X2)
     {
@@ -68,7 +69,8 @@ void NE_draw_node_connection( UIImage_t * Image,
 
     UIImageDrawRect(Image, X1, Y1-radius, half_len, radius*2, Colour);
     UIImageDrawRect(Image, X2-half_len, Y2-radius, half_len, radius*2, Colour);
-    UIImageDrawRect(Image, X1+half_len-radius, MIN(Y1,Y2)-radius, radius*2, height+radius*2, Colour);
+    if (Y1 < Y2) UIImageDrawRect(Image, X1+half_len-radius, Y1-radius, radius*2, height+radius*2, Colour);
+    else UIImageDrawRect(Image, X1+half_len-radius, Y2-radius, radius*2, height+radius*2, Colour);
 
     return;
 }
@@ -182,7 +184,7 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
     {
         NENode_t * node = data->nodes[n];
 
-        double node_sf = ScaleFactor * data->zoom;
+        double node_sf = ScaleFactor /* * data->zoom */;
         // node_sf = 1;
 
         /* If it was previously drawn with a different scale or zoom factor,
@@ -203,8 +205,8 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         /* Put it on the main image */
         UIImageOverlayImage( Image,
                              node->image,
-                             ToInteger(node->location.X*node_sf+data->view_loc_x, int),
-                             ToInteger(node->location.Y*node_sf+data->view_loc_y, int),
+                             ToInteger((node->location.X+data->view_loc_x)*node_sf, int),
+                             ToInteger((node->location.Y+data->view_loc_y)*node_sf, int),
                              1.0 );
 
         /* Get the actual node in the graph and find where it's connected to
@@ -214,18 +216,18 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
         for (int i = 0; i < PGNodeGetNumInputs(actual_node); ++i)
         {
             UICoordinate_t inloc = NENodeGetInputLocation(node, i);
-            int in_x = ToInteger((inloc.X+node->location.X)*node_sf+data->view_loc_x, int);
-            int in_y = ToInteger((inloc.Y+node->location.Y)*node_sf+data->view_loc_y, int);
+            int in_x = ToInteger((inloc.X+node->location.X+data->view_loc_x)*node_sf, int);
+            int in_y = ToInteger((inloc.Y+node->location.Y+data->view_loc_y)*node_sf, int);
 
             PGNode_t * input_node = PGNodeGetInputNode(actual_node, i);
 
             NENode_t * connect_node = NodeEditor_get_node_for_PGNode(NodeEditor, input_node);
             UICoordinate_t outloc = NENodeGetOutputLocation(connect_node, 0);
-            int out_x = ToInteger((outloc.X+connect_node->location.X)*node_sf+data->view_loc_x, int);
-            int out_y = ToInteger((outloc.Y+connect_node->location.Y)*node_sf+data->view_loc_y, int);
+            int out_x = ToInteger((outloc.X+connect_node->location.X+data->view_loc_x)*node_sf, int);
+            int out_y = ToInteger((outloc.Y+connect_node->location.Y+data->view_loc_y)*node_sf, int);
 
             NE_draw_node_connection( Image, in_x, in_y, out_x, out_y,
-                                     3, UIMakeColour(0.95,0.82,0.2,1.0) );
+                                     node_sf*2.75, UIMakeColour(0.95,0.82,0.2,1.0) );
         }
     }
 }

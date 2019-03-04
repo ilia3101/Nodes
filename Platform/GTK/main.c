@@ -59,7 +59,8 @@ UIFrame_t * mainDiv;
 
 UIImage_t * MainPic = NULL;
 
-double scalefac = /* 0.75 */1.0;
+/* Instead of 1 just for fun */
+double scalefac = 0.987654321;
 
 int fghjkl = 0;
 int X, Y;
@@ -108,32 +109,30 @@ int main(int argc, char *argv[])
 
 
     int times = 4;
-    clock_t start = clock();
+    // clock_t start = clock();
 
-    puts("About to draw a few times");
-    for (int i = 0; i < times; i++)
-    {
-        UIFrameDraw( mainDiv,
-                     pic,
-                     scalefac,
-                     UIMakeCoordinate(0,0),
-                     UIMakeRect(width,height),
-                     1 );
-    }
-    puts("Drawn");
+    // puts("Draw a few times...");
+    // for (int i = 0; i < times; i++)
+    // {
+    //     UIFrameDraw( mainDiv,
+    //                  pic,
+    //                  scalefac,
+    //                  UIMakeCoordinate(0,0),
+    //                  UIMakeRect(width,height),
+    //                  1 );
+    // }
+    // puts("Drawn");
 
-    clock_t end = clock();
-    double Time = (((double)(end - start) / CLOCKS_PER_SEC)*1000.0) / times;
-    printf("\n\nDrawing took %.3fms.\n\n\n", Time);
+    // clock_t end = clock();
+    // double Time = (((double)(end - start) / CLOCKS_PER_SEC)*1000.0) / times;
+    // printf("\n\nDrawing took %.3fms.\n\n\n", Time);
 
     // writebmp(pic->Data,pic->Width,pic->Height, "test.BMP");
     // Preview("test.BMP");
 
 
     // PicA = new_UIImage(width, height, Pixels_RGB_24i);
-    puts("Hello A");
     MainPic = new_UIImage(200, 200, Pixels_RGBA_64i);
-    puts("Hello B");
     // Draw(MainPic);
     // MainPic = PicB;
 
@@ -236,7 +235,9 @@ void motion_notify_event(GtkWidget * widget, GdkEventMotion * event)
     GdkModifierType state;
 
     if (event->is_hint)
+    {
         gdk_window_get_pointer(event->window, &mouse_x, &mouse_y, &state);
+    }
     else
     {
         mouse_x = event->x;
