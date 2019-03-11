@@ -262,3 +262,11 @@ UICoordinate_t NENodeGetInputLocation(NENode_t * Node, int InputIndex)
 
     return UIMakeCoordinate(coord.X, coord.Y+rect.Y/1.5);
 }
+
+int NENodeIsAreaDraggable(NENode_t * Node, UICoordinate_t Coord)
+{
+    if (Coord.Y > Node->dimensions.Y-NodeTitleBarHeight && Coord.Y < Node->dimensions.Y)
+        return 1;
+    else
+        return 0;
+}

@@ -36,6 +36,8 @@ typedef struct {
     double mouse_down_y;
     /* Which node it went down on */
     NENode_t * mouse_down_node;
+    int dragging_node; /* If it went down on a draggable area of the node */
+    UICoordinate_t node_original_loc; /* Where node being moved was before */
 
 } NodeEditor_data_t;
 
@@ -179,8 +181,8 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
 
     UIColour_t draw_colour = UIMakeColour(0.18,0.18,0.18,1.0);
 
-    /* Draw all the nodes */
-    for (int n = 0; n < data->num_nodes; ++n)
+    /* Draw all the nodes (backwards so first one is on top) */
+    for (int n = data->num_nodes-1; n >= 0; --n)
     {
         NENode_t * node = data->nodes[n];
 
@@ -263,6 +265,27 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
                 UIFrameMouseButton(node->interface, MouseButton, UpOrDown,
                     X-loc.X-data->view_loc_x, Y-loc.Y-data->view_loc_y, rect);
                 if (UIFrameGetNeedsRedraw(node->interface)) UIFrameSetNeedsRedraw(NodeEditor);
+
+                /* In node coordinates */
+                UICoordinate_t in_node_loc = UIMakeCoordinate( X-(loc.X+data->view_loc_x),
+                                                               Y-(loc.Y+data->view_loc_y) );
+
+                /* Check if node has been clicked in draggable area */
+                if (NENodeIsAreaDraggable(node, in_node_loc))
+                {
+                    data->dragging_node = 1;
+                    data->node_original_loc = node->location;
+                }
+                else
+                {
+                    data->dragging_node = 0;
+                }
+
+                /* Make this node be first one in node array */
+                for (int m = n; m >= 1; m--) data->nodes[m] = data->nodes[m-1];
+                data->nodes[0] = node;
+                UIFrameSetNeedsRedraw(NodeEditor);
+
                 break;
             }
         }
@@ -307,13 +330,18 @@ void NodeEditor_MouseLocation(UIFrame_t * NodeEditor, double X, double Y, UIRect
     /* Or if it is on a node */
     else if (data->mouse_is_down && data->mouse_down_node != NULL)
     {
-        UIFrameSetNeedsRedraw(NodeEditor);
-        UIFrameSetMouseLocation( data->mouse_down_node->interface,
-                                 X-data->mouse_down_node->location.X-data->view_loc_x,
-                                 Y-data->mouse_down_node->location.Y-data->view_loc_y,
-                                 data->mouse_down_node->dimensions );
-
-        // if (UIFrameGetNeedsRedraw(data->mouse_down_node->interface))
+        if (data->dragging_node)
+        {
+            data->mouse_down_node->location = UIMakeCoordinate( data->node_original_loc.X+X-data->mouse_down_x,
+                                                                data->node_original_loc.Y+Y-data->mouse_down_y );
+        }
+        else
+        {
+            UIFrameSetMouseLocation( data->mouse_down_node->interface,
+                                     X-data->mouse_down_node->location.X-data->view_loc_x,
+                                     Y-data->mouse_down_node->location.Y-data->view_loc_y,
+                                     data->mouse_down_node->dimensions );
+        }
         UIFrameSetNeedsRedraw(NodeEditor);
     }
 }

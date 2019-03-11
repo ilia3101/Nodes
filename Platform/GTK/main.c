@@ -67,10 +67,10 @@ int X, Y;
 
 
 /* Graph Image outputted to here */
-int ImageWidth = 3;
-int ImageHeight = 3;
-float * ImageData = NULL;
+PGImage_t * GraphOutputImage = NULL;
 int ImageHasChanged = 0;
+
+
 
 
 
@@ -81,7 +81,7 @@ UICoordinate_t positions[] = { UIMakeCoordinate(23,234),
                                UIMakeCoordinate(905,290),
                                UIMakeCoordinate(1200,310) };
 
-#include "BuildInterface.c"
+#include "Interface.c"
 #include "GraphTest.c"
 
 GTimer * Timer;
@@ -108,34 +108,7 @@ int main(int argc, char *argv[])
     UIImage_t * pic = new_UIImage(width*scalefac+0.5, height*scalefac+0.5, Pixels_RGB_24i);
 
 
-    int times = 4;
-    // clock_t start = clock();
-
-    // puts("Draw a few times...");
-    // for (int i = 0; i < times; i++)
-    // {
-    //     UIFrameDraw( mainDiv,
-    //                  pic,
-    //                  scalefac,
-    //                  UIMakeCoordinate(0,0),
-    //                  UIMakeRect(width,height),
-    //                  1 );
-    // }
-    // puts("Drawn");
-
-    // clock_t end = clock();
-    // double Time = (((double)(end - start) / CLOCKS_PER_SEC)*1000.0) / times;
-    // printf("\n\nDrawing took %.3fms.\n\n\n", Time);
-
-    // writebmp(pic->Data,pic->Width,pic->Height, "test.BMP");
-    // Preview("test.BMP");
-
-
-    // PicA = new_UIImage(width, height, Pixels_RGB_24i);
-    MainPic = new_UIImage(200, 200, Pixels_RGBA_64i);
-    // Draw(MainPic);
-    // MainPic = PicB;
-
+    MainPic = new_UIImage(200, 200, Pixels_RGBA_32i);
 
 	int status, milo = 0;
 
@@ -331,11 +304,23 @@ uniform sampler2D texImage;
 void main()
 {
     vec4 Src = texture(texInterface, Texcoord);
+
+    /* Get image pixel and convert it to sRGB (as it's in XYZ) */
+    // mat3 ColourMatrix = mat3(
+    //     3.2404542, -1.5371385, -0.4985314,
+    //     -0.9692660, 1.8760108, 0.0415560,
+    //     0.0556434, -0.2040259, 1.0572252
+    // );
+    // vec4 ImagePix = texture(texImage, Texcoord);
+    // vec3 Colour = vec3(ImagePix[0],ImagePix[1],ImagePix[2]) * ColourMatrix;
+    // float alpha = ImagePix[3];
     vec4 Dst = texture(texImage, Texcoord);
+
+
     float ialpha = 1.0 - Src[3];
     /* Alpha blend interface over the image */
     vec4 result = (Src*Src[3] + Dst*Dst[3]*ialpha) / (Src[3]+Dst[3]*ialpha);
-    gl_FragColor = (result*result[3]);
+    gl_FragColor = result;
 }
 
 )glsl";
@@ -651,7 +636,7 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
     clock_t start = clock(), diff;
 
     if (resize) {
-        MainPic = UIImageChange(MainPic, MainWindowWidth, MainWindowHeight, Pixels_RGBA_64i);
+        MainPic = UIImageChange(MainPic, MainWindowWidth, MainWindowHeight, Pixels_RGBA_32i);
 
         /* Set coordinates of the top level frame, which must be absolute */
         UIFrameSetXCoordinateAbsolute(mainDiv, 0, MainWindowWidth/draw_scale_fac, 0);
@@ -688,26 +673,31 @@ static gboolean on_render(GtkGLArea *area, GdkGLContext *context)
     start = clock();
     char * texfunc;
     if (resize) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, MainWindowWidth, MainWindowHeight,
-                     0, GL_RGBA, GL_UNSIGNED_SHORT, DrawPic->Data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, MainWindowWidth, MainWindowHeight,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, DrawPic->Data);
         texfunc = "glTexImage2D";
     } else {
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, MainWindowWidth,  MainWindowHeight,
-                        GL_RGBA, GL_UNSIGNED_SHORT, DrawPic->Data);
+                        GL_RGBA, GL_UNSIGNED_BYTE, DrawPic->Data);
         texfunc = "glTexSubImage2D";
     }
     diff = clock() - start;
     double texfunc_time = ((double)diff) * (1000.0 / CLOCKS_PER_SEC);
     
 
-    /* If the graph output image has been updated, upload it as texture */
-    if (ImageHasChanged && ImageData != NULL)
+    /* If the graph output image has been updated, upload it to texture */
+    pthread_mutex_lock(&GraphMutex);
+    if (ImageHasChanged && GraphOutputImage != NULL)
     {
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, textures[0]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, ImageWidth, ImageHeight,
-                     0, GL_RGBA, GL_FLOAT, ImageData);
+        glBindTexture(GL_TEXTURE_2D, textures[1]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, PGImageGetWidth(GraphOutputImage), PGImageGetHeight(GraphOutputImage),
+                     0, GL_RGBA, GL_FLOAT, PGImageGetDataPointer(GraphOutputImage));
+        ImageHasChanged = 0;
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
+    pthread_mutex_unlock(&GraphMutex);
 
 
     start = clock();

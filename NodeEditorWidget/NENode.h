@@ -31,4 +31,6 @@ PGNode_t * NENodeGetPGNode(NENode_t * Node);
 UICoordinate_t NENodeGetOutputLocation(NENode_t * Node, int OutputIndex);
 UICoordinate_t NENodeGetInputLocation(NENode_t * Node, int InputIndex);
 
+int NENodeIsAreaDraggable(NENode_t * Node, UICoordinate_t Coord);
+
 #endif

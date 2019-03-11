@@ -1,6 +1,26 @@
 
 #include "../../librawheaders/libraw.h"
 
+void SaveImage(PGImage_t * Image, char * Name)
+{
+    int width = PGImageGetWidth(Image);
+    int height = PGImageGetHeight(Image);
+    uint8_t * bmpimg_2 = malloc(width*height*3);
+    float * floatdata = PGImageGetDataPointer(Image);
+    for (int i = 0; i < width*height; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            float val = pow(floatdata[i*4+j], 0.45)*255.0;
+            if (val > 255) val = 255;
+
+            bmpimg_2[i*3+j] = val;
+        }
+    }
+    writebmp(bmpimg_2, width, height, Name);
+    free(bmpimg_2);
+}
+
 PGGraph_t * GraphTest(char * File)
 {
 
@@ -191,6 +211,7 @@ PGGraph_t * GraphTest(char * File)
     /* Now run the graph read from JSON */
     PGImage_t * graph_output_image = PGGraphGetOutput(graph_made_from_json);
     puts("hello");
+    // delete_PGImage(graph_output_image);
 
     // graph_output_image = PGGraphGetOutput(graph_made_from_json);
 
@@ -200,24 +221,8 @@ PGGraph_t * GraphTest(char * File)
 
     /* Now save the output produced from the graph */
     printf("Image: %p\n", graph_output_image);
-    width = PGImageGetWidth(graph_output_image);
-    height = PGImageGetHeight(graph_output_image);
-    uint8_t * bmpimg_2 = malloc(width*height*3);
-    float * floatydata = PGImageGetDataPointer(graph_output_image);
-    for (int i = 0; i < width*height; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            float val = pow(floatydata[i*4+j], 0.45)*255.0;
-            if (val > 255) val = 255;
+    SaveImage(graph_output_image, "Graph Pic.bmp");
 
-            bmpimg_2[i*3+j] = val;
-        }
-    }
-    writebmp(bmpimg_2, width, height, "pic_graph.bmp");
-
-
-    free(bmpimg_2);
     delete_PGImage(test);
     delete_PGGraph(graph);
 

@@ -191,6 +191,7 @@ linkcommand="$compiler -o result/$appname"
 linkcommand+=" objects/*.o"
 linkcommand+=" ../libraw_r.a"
 linkcommand+=" "$linkflags
+linkcommand+=" -s"
 
 $linkcommand #&> /dev/null
 if [ $? -eq 0 ]; then
