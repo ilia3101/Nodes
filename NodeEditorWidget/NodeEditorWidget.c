@@ -43,6 +43,14 @@ typedef struct {
 
 /***************************** NodeEditor methods *****************************/
 
+/* Brings node at Index to first position in nodes array (makes it drawn at the top) */
+void NE_set_top_node(NodeEditor_data_t * Data, int Index)
+{
+    NENode_t * node = Data->nodes[Index];
+    for (int m = Index; m > 0; m--) Data->nodes[m] = Data->nodes[m-1];
+    Data->nodes[0] = node;
+}
+
 /* TODO: make this not weird and bad */
 void NE_draw_node_connection( UIImage_t * Image,
                               int X1, int Y1,
@@ -75,6 +83,25 @@ void NE_draw_node_connection( UIImage_t * Image,
     else UIImageDrawRect(Image, X1+half_len-radius, Y2-radius, radius*2, height+radius*2, Colour);
 
     return;
+}
+
+
+void NodeEditorAddNode(UIFrame_t * NodeEditor, char * NodeTypeName)
+{
+    NodeEditor_data_t * data = UIFrameGetData(NodeEditor);
+
+    PGNode_t * actual_node = PGGraphGetNode(data->graph, PGGraphAddNodeByTypeName(data->graph, NodeTypeName));
+
+    NENode_t * node = new_NENode(actual_node);
+    node->location = UIMakeCoordinate(230,500);
+    
+    data->nodes = realloc(data->nodes, (++data->num_nodes) * sizeof(NENode_t *));
+
+    // for (int i = data->num_nodes-1; i > 0; ++i)
+    //     data->nodes[i] = data->nodes[i-1];
+
+    data->nodes[data->num_nodes-1] = node;
+    NE_set_top_node(data, data->num_nodes-1);
 }
 
 
@@ -156,6 +183,8 @@ void NodeEditor_Init(UIFrame_t * NodeEditor)
     data->zoom = 1.0;
     data->view_loc_x = 0;
     data->view_loc_y = 0;
+    data->mouse_down_node = NULL;
+    data->mouse_is_down = 0;
     return;
 }
 
@@ -223,13 +252,16 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
 
             PGNode_t * input_node = PGNodeGetInputNode(actual_node, i);
 
-            NENode_t * connect_node = NodeEditor_get_node_for_PGNode(NodeEditor, input_node);
-            UICoordinate_t outloc = NENodeGetOutputLocation(connect_node, 0);
-            int out_x = ToInteger((outloc.X+connect_node->location.X+data->view_loc_x)*node_sf, int);
-            int out_y = ToInteger((outloc.Y+connect_node->location.Y+data->view_loc_y)*node_sf, int);
+            if (input_node != NULL)
+            {
+                NENode_t * connect_node = NodeEditor_get_node_for_PGNode(NodeEditor, input_node);
+                UICoordinate_t outloc = NENodeGetOutputLocation(connect_node, 0);
+                int out_x = ToInteger((outloc.X+connect_node->location.X+data->view_loc_x)*node_sf, int);
+                int out_y = ToInteger((outloc.Y+connect_node->location.Y+data->view_loc_y)*node_sf, int);
 
-            NE_draw_node_connection( Image, in_x, in_y, out_x, out_y,
-                                     node_sf*2.75, UIMakeColour(0.95,0.82,0.2,1.0) );
+                NE_draw_node_connection( Image, in_x, in_y, out_x, out_y,
+                                         node_sf*2.75, UIMakeColour(0.95,0.82,0.2,1.0) );
+            }
         }
     }
 }
@@ -276,14 +308,24 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
                     data->dragging_node = 1;
                     data->node_original_loc = node->location;
                 }
+                /* If click in in input area, it is a signal to disconnect */
+                else if (NENodeIsAreaInput(node, in_node_loc) != -1)
+                {
+                    int iindex = NENodeIsAreaInput(node, in_node_loc);
+                    if (PGNodeGetInputNode(node->node, iindex) != NULL)
+                        PGNodeDisconnect( node->node, iindex, PGNodeGetInputNode(node->node, iindex),
+                                          PGNodeGetInputNodeOutputIndex(node->node, iindex) );
+                    data->dragging_node = 0;
+                }
                 else
                 {
                     data->dragging_node = 0;
                 }
+                
 
                 /* Make this node be first one in node array */
-                for (int m = n; m >= 1; m--) data->nodes[m] = data->nodes[m-1];
-                data->nodes[0] = node;
+                NE_set_top_node(data, n);
+
                 UIFrameSetNeedsRedraw(NodeEditor);
 
                 break;
@@ -328,22 +370,27 @@ void NodeEditor_MouseLocation(UIFrame_t * NodeEditor, double X, double Y, UIRect
         return;
     }
     /* Or if it is on a node */
-    else if (data->mouse_is_down && data->mouse_down_node != NULL)
+    else if (data->mouse_is_down && data->mouse_down_node != NULL && data->dragging_node)
     {
-        if (data->dragging_node)
-        {
-            data->mouse_down_node->location = UIMakeCoordinate( data->node_original_loc.X+X-data->mouse_down_x,
-                                                                data->node_original_loc.Y+Y-data->mouse_down_y );
-        }
-        else
-        {
-            UIFrameSetMouseLocation( data->mouse_down_node->interface,
-                                     X-data->mouse_down_node->location.X-data->view_loc_x,
-                                     Y-data->mouse_down_node->location.Y-data->view_loc_y,
-                                     data->mouse_down_node->dimensions );
-        }
+        data->mouse_down_node->location = UIMakeCoordinate( data->node_original_loc.X+X-data->mouse_down_x,
+                                                            data->node_original_loc.Y+Y-data->mouse_down_y );
         UIFrameSetNeedsRedraw(NodeEditor);
     }
+
+    int redraw_needed = 0;
+
+    for (int n = 0; n < data->num_nodes; ++n)
+    {
+        UIFrameSetMouseLocation( data->nodes[n]->interface,
+                                 X-data->nodes[n]->location.X-data->view_loc_x,
+                                 Y-data->nodes[n]->location.Y-data->view_loc_y,
+                                 data->nodes[n]->dimensions );
+
+        redraw_needed += UIFrameGetNeedsRedraw(data->nodes[n]->interface);
+    }
+
+    /* If any of the nodes need redraw after being moused on */
+    if (redraw_needed) UIFrameSetNeedsRedraw(NodeEditor);
 }
 
 

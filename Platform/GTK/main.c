@@ -61,6 +61,7 @@ UIImage_t * MainPic = NULL;
 
 /* Instead of 1 just for fun */
 double scalefac = 0.987654321;
+// double scalefac = 0.66;
 
 int fghjkl = 0;
 int X, Y;
@@ -79,7 +80,8 @@ UICoordinate_t positions[] = { UIMakeCoordinate(23,234),
                                UIMakeCoordinate(290,310),
                                UIMakeCoordinate(620,290),
                                UIMakeCoordinate(905,290),
-                               UIMakeCoordinate(1200,310) };
+                               UIMakeCoordinate(1200,310),
+                               UIMakeCoordinate(1600,310) };
 
 #include "Interface.c"
 #include "GraphTest.c"
@@ -87,10 +89,25 @@ UICoordinate_t positions[] = { UIMakeCoordinate(23,234),
 GTimer * Timer;
 
 
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
 
 int main(int argc, char *argv[])
 {
+      signal(SIGSEGV, handler);   // print all functions leaading up to crash
+
     graph = GraphTest("/home/ilia/ProcessingGraphApp/test/DSC01263.ARW");
+    // graph = GraphTest("/home/ilia/ProcessingGraphApp/test/samplepics/5D2_2.cr2");
 
     Timer = g_timer_new();
     g_timer_start (Timer);
@@ -314,7 +331,9 @@ void main()
     // vec4 ImagePix = texture(texImage, Texcoord);
     // vec3 Colour = vec3(ImagePix[0],ImagePix[1],ImagePix[2]) * ColourMatrix;
     // float alpha = ImagePix[3];
-    vec4 Dst = texture(texImage, Texcoord);
+    /* Image must be flipped */
+    vec2 upside_down_coord = vec2(Texcoord.x, 1.0-Texcoord.y);
+    vec4 Dst = texture(texImage, upside_down_coord);
 
 
     float ialpha = 1.0 - Src[3];

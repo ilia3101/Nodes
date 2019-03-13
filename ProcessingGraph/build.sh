@@ -20,7 +20,7 @@ done
 
 ############################# make the node folder #############################
 mkdir buildoutput/extras/DefaultNodes
-buildnodes=(PGExposureNode PGImageInputNode PGGraphOutputNode LibRawNode Tonemap)
+buildnodes=(PGExposureNode PGGraphOutputNode LibRawNode Tonemap Debayer WhiteBalance)
 for node in ${buildnodes[@]}
 do
     $compiler $compilerflags -shared -fPIC DefaultNodes/$node.c  -o buildoutput/extras/DefaultNodes/$node.so

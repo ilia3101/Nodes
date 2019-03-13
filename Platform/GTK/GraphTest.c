@@ -84,13 +84,7 @@ PGGraph_t * GraphTest(char * File)
     void * pointer = PGImageGetDataPointer(test);
 
     /* Guess node directory by using argv[0] */
-    char * node_dir = "/home/ilia/ProcessingGraphApp/Platform/GTK/buildoutput/result/DefaultNodes";
-    // char * end = node_dir + strlen(node_dir)-1;
-    // for (; *end != '/' && *end != '\\'; --end)
-    // /* Cut string off to remove executable name */
-    // *end = 0x00;
-    // puts(node_dir);
-
+    char * node_dir = "DefaultNodes";
 
     ProcessingGraphInitialiseLibrary(node_dir);
 
@@ -129,19 +123,13 @@ PGGraph_t * GraphTest(char * File)
     #endif
 
     /* Exposure node */
+    PGNode_t * demosaic_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Demosaic"));
+    // PGNodeSetValueParameter(exposure_node, 0, 0);
+
     PGNode_t * exposure_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
-    PGNodeSetValueParameter(exposure_node, 0, 0);
-
-    PGNode_t * exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
-    PGNodeSetValueParameter(exposure_node2, 0, 3.0);
-    // PGNodeSetName(exposure_node2, "Exposure node that isn't connected");
-
-    // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
     // PGNodeSetValueParameter(exposure_node2, 0, 3.0);
 
-    // exposure_node2 = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Exposure"));
-    // PGNodeSetValueParameter(exposure_node2, 0, 3.0);
-    // PGNodeSetName(exposure_node2, "A custom name");
+    PGNode_t * wb_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "White Balance"));
 
     /* Exposure node */
     PGNode_t * tonemap_node = PGGraphGetNode(graph, PGGraphAddNodeByTypeName(graph, "Tonemap"));
@@ -152,25 +140,14 @@ PGGraph_t * GraphTest(char * File)
     int output_node_index = PGGraphAddNodeByTypeName(graph, "Output");
     printf("output node index: %i\n", output_node_index);
     PGNode_t * output_node = PGGraphGetNode(graph, output_node_index);
-    // PGGraphGetNode(graph, output_node_index);
 
-    // /* Output node input #0 to tonemap node output #0 */
-    // PGNodeConnect(output_node, 0, tonemap_node, 0);
-    // /* Tonemap node input #0 to exposure node output #0 */
-    // PGNodeConnect(tonemap_node, 0, exposure_node, 0);
-    // /* exposure node input #0 to LibRaw node output #0 */
-    // PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
 
-    /* Output node input #0 to tonemap node output #0 */
     PGNodeConnect(output_node, 0, tonemap_node, 0);
-    /* Tonemap node input #0 to exposure node 2 output #0 */
-    PGNodeConnect(tonemap_node, 0, exposure_node2, 0);
-    /* exposure node input #0 to LibRaw node output #0 */
-    PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
-    /* exposure node2 input #0 to exposure node node output #0 */
-    PGNodeConnect(exposure_node2, 0, exposure_node, 0);
-    /* exposure node 2 input #0 to LibRaw node output #0 */
-    PGNodeConnect(exposure_node, 0, LibRaw_node, 0);
+    PGNodeConnect(tonemap_node, 0, exposure_node, 0);
+    PGNodeConnect(exposure_node, 0, wb_node, 0);
+    PGNodeConnect(wb_node, 0, demosaic_node, 0);
+    PGNodeConnect(demosaic_node, 0, LibRaw_node, 0);
+    puts("HELLO this is text");
 
 
     // PGImage_t * a_graph_output_image = PGGraphGetOutput(graph);
@@ -185,7 +162,6 @@ PGGraph_t * GraphTest(char * File)
     WriteJSON(jsongraph, 1, stdout);
     puts("");
     WriteJSON(jsongraph, 0, stdout);
-    puts("");
 
     /* Just as a test...b
     save graph to JSON */

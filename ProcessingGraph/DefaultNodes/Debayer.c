@@ -8,6 +8,48 @@
 /* This must be included */
 #include "../ProcessingGraph.h"
 
+#include "Debayer/AMaZE_algorithm.c"
+
+/* Wraper for the horrible amaze function */
+void debayerAmaze(float * __restrict debayerto, float * __restrict bayerdata, int width, int height)
+{
+    size_t pixelsize = width * height;
+
+    float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
+
+    float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
+    float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
+    float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
+
+    /* run the Amaze */
+    AMaZE_demosaic(&(amazeinfo_t){imagefloat2d,red2d,green2d,blue2d,0,0,width,height,0,0});
+
+    for (int i = 0; i < pixelsize; i++)
+    {
+        size_t j = i*4;
+        debayerto[ j ] = red1d[i] / 65535.0f;
+        debayerto[j+1] = green1d[i] / 65535.0f;
+        debayerto[j+2] = blue1d[i] / 65535.0f;
+        debayerto[j+3] = 1.0f;
+    }
+
+    free(red1d);
+    free(red2d);
+    free(green1d);
+    free(green2d);
+    free(blue1d);
+    free(blue2d);
+    free(imagefloat2d);
+}
+
+
 /* This node only needs one output function */
 static void output_function(PGNode_t * Node)
 {
@@ -30,17 +72,18 @@ static void output_function(PGNode_t * Node)
     float * dest = PGImageGetDataPointer(img);
     float * src = PGImageGetDataPointer(input);
 
-    printf("source: %p, %f\n", src, src[3]);
+    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img);
 
-    /* Becoz it's stops */
-    printf("exposure: %f\n", PGNodeGetValueParameterValue(Node, 0));
-    float exposure_fac = pow(2.0, PGNodeGetValueParameterValue(Node, 0));
+    float * rawData = malloc(sizeof(float)*sz);
 
-    size_t sz = PGImageGetWidth(img)*PGImageGetHeight(img)*3;
     for (size_t i = 0; i < sz; ++i)
     {
-        dest[i] = src[i] * exposure_fac;
+        rawData[i] = src[i] * 65535.0f;
     }
+
+    debayerAmaze(dest, rawData, PGImageGetWidth(img), PGImageGetHeight(img));
+
+    free(rawData);
 }
 
 static void init(PGNode_t * Node)
@@ -54,6 +97,8 @@ static void uninit(PGNode_t * Node)
 }
 
 static void (* output_functions[])(PGNode_t *) = {&output_function};
+static char * input_names[] = {"Image"};
+static char * output_names[] = {"Image"};
 
 static PGNodeSpec_t spec =
 {
@@ -62,20 +107,14 @@ static PGNodeSpec_t spec =
     .Category = "Basics",
 
     .NumOutputs = 1,
+    .OutputNames = output_names,
     .OutputTypes = {PGNodeImageOutput},
-    .NumInputs = 3,
-    .InputTypes = {PGNodeArrayOutput, PGNodeValueOutput, PGNodeValueOutput},
+    .NumInputs = 1,
+    .InputNames = input_names,
+    .InputTypes = {PGNodeImageOutput},
 
-    .HasParameters = 1,
-    .NumParameters = 1,
-    .Parameters = &(PGNodeParameterSpec_t){ .Name = "Exposure",
-                                            .Description = "Exposure in stops",
-                                            .Type = 0, /* Range */
-                                            .Integers = 0, /* Continous */
-                                            .LimitRange = 1,
-                                            .MinValue = -4.0,
-                                            .MaxValue = 4.0,
-                                            .DefaultValue = 0.0 },
+    .HasParameters = 0,
+    .NumParameters = 0,
 
     .OutputFunctions = {&output_function},
 

@@ -212,12 +212,16 @@ PGGraph_t * JSONToPGGraph(JSONBlock_t * GraphJSON, char * JSONFilePath)
             for (int i = 0; i < num_connected_inputs; ++i)
             {
                 JSONBlock_t * input = JSONObjectGetAttributeByIndex(inputs, i);
-                char * input_name = JSONObjectGetAttributeName(inputs, i);
-                char * input_node_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 0));
-                PGNode_t * input_node = PGGraphGetNodeByName(graph, input_node_name);
-                char * input_node_output_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 1));
 
-                PGNodeConnectByInputOutputNames(node, input_name, input_node, input_node_output_name);
+                if (JSONBlockGetType(input) != JSONNull)
+                {
+                    char * input_name = JSONObjectGetAttributeName(inputs, i);
+                    char * input_node_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 0));
+                    PGNode_t * input_node = PGGraphGetNodeByName(graph, input_node_name);
+                    char * input_node_output_name = JSONStringGetTextPointer(JSONArrayGetElement(input, 1));
+
+                    PGNodeConnectByInputOutputNames(node, input_name, input_node, input_node_output_name);
+                }
             }
         }
     }

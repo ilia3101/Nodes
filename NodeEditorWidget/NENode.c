@@ -31,16 +31,21 @@ void NENode_update_interface(NENode_t * Node)
             break;
         case PGNodeValueParameter:;
             double value = UISliderGetPosition(UIFrameGetSubframeByID(Node->parameters[p], "slider")) *
-                            (spec->Parameters[p].MaxValue - spec->Parameters[p].MinValue) + spec->Parameters[p].MinValue;
+                           (spec->Parameters[p].MaxValue - spec->Parameters[p].MinValue) + spec->Parameters[p].MinValue;
             PGNodeSetValueParameter(Node->node, p, value);
-            sprintf(string, "%s: %+.2f", spec->Parameters[p].Name, PGNodeGetValueParameterValue(Node->node, p));
+            sprintf(string, (spec->Parameters[p].MinValue < 0) ? "%s: %+.2f" : "%s: %.2f",
+                        spec->Parameters[p].Name, PGNodeGetValueParameterValue(Node->node, p));
             UILabelSetText(UIFrameGetSubframeByID(Node->parameters[p], "label"), string);
-            // UISliderSetPosition(UIFrameGetSubframeByID(Node->parameters[p], "slider"),
-            //                   (PGNodeGetValueParameterValue(Node->node, p)- spec->Parameters[p].MinValue) /
-            //                   (spec->Parameters[p].MaxValue - spec->Parameters[p].MinValue) );
             break;
         }
     }
+    return;
+}
+
+void NENode_delete_button_function(UIFrame_t * DeleteButton)
+{
+    NENode_t * node = UIFrameGetUserData(DeleteButton);
+
     return;
 }
 
@@ -89,6 +94,17 @@ void NENode_create_interface(NENode_t * Node)
     UIFrameAddSubframe(main, name_label);
     UILabelSetTextColour(name_label, UIMakeColour(0.8,0.8,0.8,1.0));
     UILabelSetText(name_label, spec->Name);
+
+    /* Delete button */
+    UIFrame_t * delete_button = new_UIFrame(UIButtonType(), "NodeDeleteButton");
+    UIFrameSetXCoordinateAbsolute(delete_button, 3, 19, 1);
+    UIFrameSetYCoordinateAbsolute(delete_button, 3, 19, 1);
+    UIButtonSetBackgroundColour(delete_button, UIMakeColour(0.7,0.2,0.2,1));
+    UIButtonSetBackgroundMouseOverColour(delete_button, UIMakeColour(0.98,0.24,0.24,1));
+    UIButtonSetBackgroundMouseDownColour(delete_button, UIMakeColour(0.8,0.02,0.02,1));
+    UIButtonSetTextColour(delete_button, UIMakeColour(0.9,0.9,0.9,1));
+    UIButtonSetText(delete_button, "x");
+    UIFrameAddSubframe(main, delete_button);
 
     /* Add outputs/inputs/parameters, outputs at top, inputs bottom */
 
@@ -269,4 +285,20 @@ int NENodeIsAreaDraggable(NENode_t * Node, UICoordinate_t Coord)
         return 1;
     else
         return 0;
+}
+
+int NENodeIsAreaInput(NENode_t * Node, UICoordinate_t Coord)
+{
+    for (int i = 0; i < PGNodeGetSpec(Node->node)->NumInputs; ++i)
+    {
+        UIRect_t selfrect = UIFrameGetRect(Node->interface, UIMakeRect(0,0));
+        UICoordinate_t coord = UIFrameGetCoordinate(Node->inputs[i], selfrect);
+        UIRect_t rect = UIFrameGetRect(Node->inputs[i], selfrect);
+
+        if (Coord.Y < coord.Y+rect.Y && Coord.Y > coord.Y && Coord.X < 35)
+        {
+            return i;
+        }
+    }
+    return -1;
 }

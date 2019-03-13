@@ -64,22 +64,19 @@ static void output_function(PGNode_t * Node)
     //     pix += 4;
     //     ++bayerpix;
     // }
-    for (int i = 0; i < width*height*4; i+=4)
+    for (size_t y = 0; y < height; ++y)
     {
-        raw_float[i] = lookup[imageRAW[i+2]] /* - 0.00177f */;
-        raw_float[i+1] = lookup[imageRAW[i+1]] /* - 0.00177f */;
-        raw_float[i+2] = lookup[imageRAW[i]] /* - 0.00177f */;
-        if (imageRAW[i+3] != 0) raw_float[i+1] = lookup[imageRAW[i+3]];
+        // size_t locy2 = y*width;
+        size_t locy = (height-y-1)*width;
+        for (size_t x = 0; x < width; ++x)
+        {
+            size_t out = locy+x;
+            size_t loc = (locy+x)*4;
+            float val = lookup[imageRAW[loc+0]]+lookup[imageRAW[loc+1]]+lookup[imageRAW[loc+2]]+lookup[imageRAW[loc+3]];
+            raw_float[out] = val;
+        }
     }
 
-    // for (int y = 0; y < height; ++y)
-    // {
-    //     size_t loc = width * y * 4;
-    //     for (int x = 0; x < width; ++x)
-    //     {
-    //         pix[loc + x * 4] = bayerimage[loc/8+x];
-    //     }
-    // }
 
     libraw_recycle(Raw);
     libraw_close(Raw);

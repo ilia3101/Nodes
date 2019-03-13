@@ -33,4 +33,7 @@ UICoordinate_t NENodeGetInputLocation(NENode_t * Node, int InputIndex);
 
 int NENodeIsAreaDraggable(NENode_t * Node, UICoordinate_t Coord);
 
+/* Is area where input should go to, return -1=no, other value=index of input */
+int NENodeIsAreaInput(NENode_t * Node, UICoordinate_t Coord);
+
 #endif
