@@ -1,4 +1,4 @@
-/* worst code needs */
+/* worst code hopefully get rewritten */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,10 +34,15 @@ typedef struct {
     /* Where mouse originally went down */
     double mouse_down_x;
     double mouse_down_y;
+    /* Where mouse is now */
+    double mouse_x;
+    double mouse_y;
     /* Which node it went down on */
     NENode_t * mouse_down_node;
     int dragging_node; /* If it went down on a draggable area of the node */
     UICoordinate_t node_original_loc; /* Where node being moved was before */
+    int making_connection; /* If it's making a connection between two nodes */
+    int making_connection_output_index;
 
 } NodeEditor_data_t;
 
@@ -264,6 +269,19 @@ void NodeEditor_Draw( UIFrame_t * NodeEditor,
             }
         }
     }
+
+    /* If making a connection */
+    if (data->mouse_is_down && data->making_connection)
+    {
+        int startx = ToInteger(data->mouse_down_x*ScaleFactor, int);
+        int starty = ToInteger(data->mouse_down_y*ScaleFactor, int);
+
+        int endx = ToInteger(data->mouse_x*ScaleFactor, int);
+        int endy = ToInteger(data->mouse_y*ScaleFactor, int);
+
+        NE_draw_node_connection( Image, startx, starty, endx, endy,
+                                    ScaleFactor*2.75, UIMakeColour(0.95,0.3,0.2,1.0) );
+    }
 }
 
 void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
@@ -307,6 +325,7 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
                 {
                     data->dragging_node = 1;
                     data->node_original_loc = node->location;
+                    data->making_connection = 0;
                 }
                 /* If click in in input area, it is a signal to disconnect */
                 else if (NENodeIsAreaInput(node, in_node_loc) != -1)
@@ -316,13 +335,20 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
                         PGNodeDisconnect( node->node, iindex, PGNodeGetInputNode(node->node, iindex),
                                           PGNodeGetInputNodeOutputIndex(node->node, iindex) );
                     data->dragging_node = 0;
+                    data->making_connection = 0;
+                }
+                else if (NENodeIsAreaOutput(node, in_node_loc) != -1)
+                {
+                    data->making_connection = 1;
+                    data->making_connection_output_index = NENodeIsAreaOutput(node, in_node_loc);
+                    data->dragging_node = 0;
                 }
                 else
                 {
                     data->dragging_node = 0;
+                    data->making_connection = 0;
                 }
                 
-
                 /* Make this node be first one in node array */
                 NE_set_top_node(data, n);
 
@@ -337,6 +363,8 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
         {
             data->view_loc_x_mouse = data->view_loc_x;
             data->view_loc_y_mouse = data->view_loc_y;
+            data->making_connection = 0;
+            data->dragging_node = 0;
             return;
         }
     }
@@ -349,6 +377,41 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
                                 X-data->mouse_down_node->location.X-data->view_loc_x,
                                 Y-data->mouse_down_node->location.Y-data->view_loc_y,
                                 data->mouse_down_node->dimensions );
+            
+            /* If making connection, check if it is down on a node's input now */
+            if (data->making_connection)
+            {
+                /* Check if it is down on any nodes */
+                for (int n = 0; n < data->num_nodes; ++n)
+                {
+                    NENode_t * node = data->nodes[n];
+                    UIRect_t rect = node->dimensions;
+                    UICoordinate_t loc = node->location;
+
+                    /* If it goes down on the node */
+                    if (X > loc.X+data->view_loc_x && X < loc.X+rect.X+data->view_loc_x
+                        && Y > loc.Y+data->view_loc_y && Y < loc.Y+rect.Y+data->view_loc_y)
+                    {
+                        /* In node coordinates */
+                        UICoordinate_t in_node_loc = UIMakeCoordinate( X-(loc.X+data->view_loc_x),
+                                                                       Y-(loc.Y+data->view_loc_y) );
+
+                        if (NENodeIsAreaInput(node, in_node_loc) != -1)
+                        {
+                            int iindex = NENodeIsAreaInput(node, in_node_loc);
+                            printf("connecting %s input %i to %s output %i\n", PGNodeGetName(node->node),
+                            iindex, PGNodeGetName(data->mouse_down_node->node), data->making_connection_output_index);
+                            PGNodeConnect(node->node, iindex, data->mouse_down_node->node,
+                                            data->making_connection_output_index);
+                        }
+
+                        UIFrameSetNeedsRedraw(NodeEditor);
+
+                        break;
+                    }
+                }
+            }
+
             if (UIFrameGetNeedsRedraw(data->mouse_down_node->interface))
                 UIFrameSetNeedsRedraw(NodeEditor);
         }
@@ -359,6 +422,9 @@ void NodeEditor_MouseButton( UIFrame_t * NodeEditor,
 void NodeEditor_MouseLocation(UIFrame_t * NodeEditor, double X, double Y, UIRect_t Rect)
 {
     NodeEditor_data_t * data = UIFrameGetData(NodeEditor);
+
+    data->mouse_x = X;
+    data->mouse_y = Y;
 
     /* If the mouse is down and did not land on a node, move */
     if (data->mouse_is_down && data->mouse_down_node == NULL)
@@ -391,6 +457,7 @@ void NodeEditor_MouseLocation(UIFrame_t * NodeEditor, double X, double Y, UIRect
 
     /* If any of the nodes need redraw after being moused on */
     if (redraw_needed) UIFrameSetNeedsRedraw(NodeEditor);
+    if (data->mouse_is_down && data->making_connection) UIFrameSetNeedsRedraw(NodeEditor);
 }
 
 

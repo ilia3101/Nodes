@@ -10,6 +10,7 @@
 
 #define NodeTitleBarHeight 30
 #define NodeUnitHeight 50
+#define NodeWidth 220
 
 /* All updating done in here */
 void NENode_update_interface(NENode_t * Node)
@@ -219,7 +220,7 @@ NENode_t * new_NENode(PGNode_t * ActualNode)
 
     /* How many units high the node is */
     int num_units = num_inputs + num_parameters + num_outputs;
-    node->dimensions = UIMakeRect(220, num_units*NodeUnitHeight+NodeTitleBarHeight);
+    node->dimensions = UIMakeRect(NodeWidth, num_units*NodeUnitHeight+NodeTitleBarHeight);
 
     /* Create image */
     node->node = ActualNode;
@@ -296,6 +297,22 @@ int NENodeIsAreaInput(NENode_t * Node, UICoordinate_t Coord)
         UIRect_t rect = UIFrameGetRect(Node->inputs[i], selfrect);
 
         if (Coord.Y < coord.Y+rect.Y && Coord.Y > coord.Y && Coord.X < 35)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int NENodeIsAreaOutput(NENode_t * Node, UICoordinate_t Coord)
+{
+    for (int i = 0; i < PGNodeGetSpec(Node->node)->NumOutputs; ++i)
+    {
+        UIRect_t selfrect = UIFrameGetRect(Node->interface, UIMakeRect(0,0));
+        UICoordinate_t coord = UIFrameGetCoordinate(Node->outputs[i], selfrect);
+        UIRect_t rect = UIFrameGetRect(Node->outputs[i], selfrect);
+
+        if (Coord.Y < coord.Y+rect.Y && Coord.Y > coord.Y && Coord.X > NodeWidth-35)
         {
             return i;
         }

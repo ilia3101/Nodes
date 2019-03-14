@@ -73,6 +73,7 @@ int ImageHasChanged = 0;
 
 
 
+GtkWidget * main_window;
 
 
 PGGraph_t * graph;
@@ -137,7 +138,6 @@ int main(int argc, char *argv[])
 	return status;
 }
 
-GtkWidget * main_window;
 
 //https://developer.gnome.org/gtk3/stable/GtkFileChooserDialog.html
 static void buttonfunc (GtkWidget *widget, gpointer data)

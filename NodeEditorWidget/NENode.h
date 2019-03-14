@@ -35,5 +35,6 @@ int NENodeIsAreaDraggable(NENode_t * Node, UICoordinate_t Coord);
 
 /* Is area where input should go to, return -1=no, other value=index of input */
 int NENodeIsAreaInput(NENode_t * Node, UICoordinate_t Coord);
+int NENodeIsAreaOutput(NENode_t * Node, UICoordinate_t Coord);
 
 #endif

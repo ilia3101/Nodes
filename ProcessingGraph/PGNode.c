@@ -38,6 +38,15 @@ PGNode_t * new_PGNode(PGNodeSpec_t * Spec, PGGraph_t * Graph)
     node->outputs = MBZeroAlloc(mb, sizeof(PGNodeOutput_t) * Spec->NumOutputs);
     node->parameter_states = MBZeroAlloc(mb, Spec->NumParameters * sizeof(PGNodeParameterState_t));
 
+    /* Set parameter default values */
+    for (int p = 0; p < Spec->NumParameters; ++p)
+    {
+        if (Spec->Parameters[p].Type == 0)
+        {
+            node->parameter_states[p].value = Spec->Parameters[p].DefaultValue;
+        }
+    }
+
     /* Run the node class's init function */
     Spec->Init(node);
 
@@ -106,15 +115,16 @@ void PGNodeConnect( PGNode_t * Node,
     Node->input_nodes[NodeInputIndex] = InputNode;
     Node->input_node_output_indexes[NodeInputIndex] = InputNodeOutputIndex;
 
+    /* TODO: FIX THE CRASHING COMMENTED OUT BIT CAUSES */
+
     /* Now make it so InputNode is aware it's output of index
-     * InputNodeOutputIndex goes to Node. Ao it knows which nodes to mark as
+     * InputNodeOutputIndex goes to Node. So it knows which nodes to flag as
      * changed when it changes */
-    int nodes = ++InputNode->output_node_counts[InputNodeOutputIndex];
-    InputNode->output_nodes[InputNodeOutputIndex] =
-                       MBRealloc( Node->memory_bank,
-                                  InputNode->output_nodes[InputNodeOutputIndex],
-                                  sizeof(PGNode_t *) * nodes );
-    InputNode->output_nodes[InputNodeOutputIndex][nodes-1] = Node;
+    // int nodes = ++InputNode->output_node_counts[InputNodeOutputIndex];
+    // InputNode->output_nodes[InputNodeOutputIndex] = MBRealloc( Node->memory_bank,
+    //                                                            InputNode->output_nodes[InputNodeOutputIndex],
+    //                                                            sizeof(PGNode_t *) * nodes );
+    // InputNode->output_nodes[InputNodeOutputIndex][nodes-1] = Node;
 }
 
 void PGNodeConnectByInputOutputNames( PGNode_t * Node,
